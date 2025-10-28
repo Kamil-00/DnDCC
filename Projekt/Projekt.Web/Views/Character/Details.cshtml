@@ -1,0 +1,99 @@
+@model Projekt.Model.DataModels.Character
+
+@{
+    ViewData["Title"] = "Character Details";
+}
+
+<h2 class="mb-4">Character Details: @Model.Name</h2>
+
+<div class="card p-4 shadow-sm">
+    <h4>Basic Information</h4>
+    <table class="table table-striped">
+        <tr><th>Name</th><td>@Model.Name</td></tr>
+        <tr><th>Alignment</th><td>@Model.Alignment</td></tr>
+        <tr><th>Race</th><td>@Model.Race</td></tr>
+        <tr><th>Class</th><td>@Model.Class</td></tr>
+    </table>
+
+    <h4>Attributes</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Strength</th>
+                <th>Dexterity</th>
+                <th>Constitution</th>
+                <th>Intelligence</th>
+                <th>Wisdom</th>
+                <th>Charisma</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Model.Strength</td>
+                <td>@Model.Dexterity</td>
+                <td>@Model.Constitution</td>
+                <td>@Model.Intelligence</td>
+                <td>@Model.Wisdom</td>
+                <td>@Model.Charisma</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Combat Stats</h4>
+    <table class="table table-striped">
+        <tr><th>Max HP</th><td>@Model.MaxHP</td></tr>
+        <tr><th>Current HP</th><td>@Model.CurrentHP</td></tr>
+        <tr><th>Temporary HP</th><td>@Model.TemporaryHP</td></tr>
+        <tr><th>Armor Class</th><td>@Model.ArmorClass</td></tr>
+        <tr><th>Speed</th><td>@Model.Speed</td></tr>
+    </table>
+
+    <h4>Proficiencies</h4>
+    @if (Model.Proficiencies != null && Model.Proficiencies.Any())
+    {
+        <ul>
+            @foreach (var prof in ViewData["Proficiencies"] as IList<string>)
+            {
+                <li>@prof</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="text-muted">No proficiencies.</p>
+    }
+
+    <h4>Traits</h4>
+    @if (Model.Traits != null && Model.Traits.Any())
+    {
+        <ul>
+            @foreach (var trait in ViewData["Traits"] as IList<string>)
+            {
+                <li>@trait</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="text-muted">No traits.</p>
+    }
+
+    <h4>Items</h4>
+    @if (Model.CharacterItems != null && Model.CharacterItems.Any())
+    {
+        <ul>
+            @foreach (var item in Model.CharacterItems)
+            {
+                <li>@item.ItemId</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="text-muted">No items.</p>
+    }
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

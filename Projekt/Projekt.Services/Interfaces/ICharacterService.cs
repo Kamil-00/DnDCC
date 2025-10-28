@@ -9,4 +9,5 @@ public interface ICharacterService
 {
     public Character GetCharacter(int id);
     public IEnumerable<Character> GetCharacters(int? userId = null);
+    public void SaveCharacter(Character character);
 }

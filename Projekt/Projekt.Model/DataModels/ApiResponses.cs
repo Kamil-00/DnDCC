@@ -39,10 +39,15 @@ public class From
 public class Option
 {
     public string Option_Type { get; set; }
-    public ProficiencyItem Item { get; set; }
+    public ApiItem Item { get; set; }
 }
 
-public class ProficiencyItem
+public class Results {
+    public int Count {get;set;}
+    public List<ApiItem> ApiItems { get; set; }
+}
+
+public class ApiItem
 {
     public string Index { get; set; }
     public string Name { get; set; }

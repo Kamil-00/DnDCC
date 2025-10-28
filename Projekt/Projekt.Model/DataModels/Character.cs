@@ -15,20 +15,18 @@ public class Character
 
     public string Race {get;set;}
     public string Class {get;set;}
-    public string SubClass {get;set;}
 
-    public IList<string> Proficiencies { get; set; } = new List<string>();
-    public IList<string> Traits { get; set; } = new List<string>();
+    public IList<string> Proficiencies { get; set; } = new List<string>(); // OPCJE
+    public IList<string> Traits { get; set; } = new List<string>(); // UZUPEŁNIONE AUTOMATYCZNIE
 
-    public int MaxHP { get; set; }
-    public int CurrentHP { get; set; }
-    public int TemporaryHP { get; set; }
-    public int ArmorClass { get; set; }
-    public int Speed { get; set; }
+    public int MaxHP { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
+    public int CurrentHP { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
+    public int TemporaryHP { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
+    public int ArmorClass { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
+    public int Speed { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
 
-    public IList<string> Spells { get; set; } = new List<string>();
-    public virtual IList<CharacterItem> CharacterItems { get; set; } = new List<CharacterItem>();
+    public virtual IList<CharacterItem> CharacterItems { get; set; } = new List<CharacterItem>(); // OPCJE
 
-    public int UserId {get;set;}
-    public virtual User User {get;set;}
+    public int? UserId {get;set;}
+    public virtual User? User {get;set;}
 }
