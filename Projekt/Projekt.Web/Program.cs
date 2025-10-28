@@ -2,10 +2,16 @@ using Projekt.DAL;
 using Projekt.Model.DataModels;
 using Projekt.Services.Configuration.AutoMapperProfiles;
 using Projekt.Web.Controllers;
+using Projekt.Services.ConcreteServices;
+using Projekt.Services.Interfaces;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
-using Projekt.Services.ConcreteServices;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,13 +22,70 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")) //here you can define a database type.
 );
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = false)
+
+
+// Identity (User<int>/Role<int>)
+builder.Services
+    .AddIdentityCore<User>(options =>
+    {
+        options.Password.RequiredLength = 6;
+        options.Password.RequireDigit = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+    })
     .AddRoles<Role>()
-    .AddRoleManager<RoleManager<Role>>()
-    .AddUserManager<UserManager<User>>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
-builder.Services.AddTransient(typeof(ILogger), typeof(Logger<Program>));
-builder.Services.AddTransient<IStringLocalizer, StringLocalizer<BaseController>>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+
+// JWT Authentication
+
+var jwt = builder.Configuration.GetSection("Jwt");
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwt["Issuer"],
+        ValidAudience = jwt["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!)),
+        RoleClaimType = ClaimTypes.Role,
+        NameClaimType = ClaimTypes.NameIdentifier
+    };
+
+    // Allow JWTs to be passed in cookies
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = ctx =>
+        {
+            if (string.IsNullOrEmpty(ctx.Token) &&
+                ctx.Request.Cookies.TryGetValue("access_token", out var cookieToken))
+            {
+                ctx.Token = cookieToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+
+    
+builder.Services.AddTransient(typeof(ILogger), typeof(Logger<Program>)); // 
+builder.Services.AddTransient<IStringLocalizer, StringLocalizer<BaseController>>(); //
+
+// DI Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 builder.Services.AddTransient<ICharacterService, CharacterService>();
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -67,5 +130,9 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+// Simple endpoint to test authentication
+app.MapGet("/api/ping", () => "dzięki działa").RequireAuthorization();
 
 app.Run();
