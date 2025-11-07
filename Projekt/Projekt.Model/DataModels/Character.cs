@@ -25,7 +25,7 @@ public class Character
     public int ArmorClass { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
     public int Speed { get; set; } // UZUPEŁNIONE AUTOMATYCZNIE
 
-    public virtual IList<CharacterItem> CharacterItems { get; set; } = new List<CharacterItem>(); // OPCJE
+    public virtual IList<Item> Items { get; set; } = new List<Item>(); // OPCJE
 
     public int? UserId {get;set;}
     public virtual User? User {get;set;}

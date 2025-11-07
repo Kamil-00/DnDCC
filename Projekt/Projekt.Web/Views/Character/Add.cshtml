@@ -6,36 +6,310 @@
 
 <h2>Add New Character</h2>
 
-<form asp-action="Add" method="post">
+<form id="characterForm" asp-action="Add" method="post">
     <div class="form-group">
         <label asp-for="Name"></label>
-        <input asp-for="Name" class="form-control" />
+        <input id="name" asp-for="Name" class="form-control" />
     </div>
 
     <div class="form-group">
         <label asp-for="Alignment"></label>
-        <select asp-for="Alignment" class="form-select" asp-items="@(ViewData["Alignments"] as IEnumerable<SelectListItem>)"></select>
+        <select id="alignment" asp-for="Alignment" class="form-select" asp-items="@(ViewData["Alignments"] as IEnumerable<SelectListItem>)"></select>
     </div>
 
     <div class="form-group">
         <label asp-for="Race"></label>
-        <select asp-for="Race" class="form-select" asp-items="@(ViewData["Races"] as IEnumerable<SelectListItem>)"></select>
+        <select id="race" asp-for="Race" class="form-select" asp-items="@(ViewData["Races"] as IEnumerable<SelectListItem>)"></select>
     </div>
 
     <div class="form-group">
         <label asp-for="Class"></label>
-        <select asp-for="Class" class="form-select" asp-items="@(ViewData["Classes"] as IEnumerable<SelectListItem>)"></select>
+        <select id="classSelect" asp-for="Class" class="form-select" asp-items="@(ViewData["Classes"] as IEnumerable<SelectListItem>)"></select>
     </div>
 
     <div class="form-row">
-        <div class="col"><label asp-for="Strength"></label><input asp-for="Strength" class="form-control" /></div>
-        <div class="col"><label asp-for="Dexterity"></label><input asp-for="Dexterity" class="form-control" /></div>
-        <div class="col"><label asp-for="Constitution"></label><input asp-for="Constitution" class="form-control" /></div>
-        <div class="col"><label asp-for="Intelligence"></label><input asp-for="Intelligence" class="form-control" /></div>
-        <div class="col"><label asp-for="Wisdom"></label><input asp-for="Wisdom" class="form-control" /></div>
-        <div class="col"><label asp-for="Charisma"></label><input asp-for="Charisma" class="form-control" /></div>
+        <div class="col"><label asp-for="Strength"></label><input id="str" asp-for="Strength" class="form-control" /></div>
+        <div class="col"><label asp-for="Dexterity"></label><input id="dex" asp-for="Dexterity" class="form-control" /></div>
+        <div class="col"><label asp-for="Constitution"></label><input id="con" asp-for="Constitution" class="form-control" /></div>
+        <div class="col"><label asp-for="Intelligence"></label><input id="int" asp-for="Intelligence" class="form-control" /></div>
+        <div class="col"><label asp-for="Wisdom"></label><input id="wis" asp-for="Wisdom" class="form-control" /></div>
+        <div class="col"><label asp-for="Charisma"></label><input id="cha" asp-for="Charisma" class="form-control" /></div>
     </div>
+
+    <div id="proficiencyContainer"></div>
+    <div id="equipmentContainer"></div>
 
     <button type="submit" class="btn btn-success mt-3">Create</button>
     <a class="btn btn-secondary mt-3" href="@Url.Action("Index", "Character")">Cancel</a>
 </form>
+@section Scripts {
+<script>
+    function generateFieldsets(container, choice, index){
+        const fieldset = document.createElement('fieldset');
+        fieldset.classList.add('border', 'rounded', 'p-3', 'mb-3');
+
+        const legend = document.createElement('legend');
+        legend.textContent = choice.description;
+        fieldset.appendChild(legend);
+
+        const info = document.createElement('p');
+        info.textContent = `Choose ${choice.chooseCount}:`;
+        fieldset.appendChild(info);
+
+        choice.options.forEach((opt, i) => {
+            const div = document.createElement('div');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = `proficiency_${index}`;
+            checkbox.value = opt.value;
+            checkbox.id = `opt_${index}_${i}`;
+
+            const label = document.createElement('label');
+            label.setAttribute('for', `opt_${index}_${i}`);
+            label.textContent = opt.text;
+
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            fieldset.appendChild(div);
+        });
+
+        fieldset.addEventListener('change', e => {
+            const checked = fieldset.querySelectorAll('input[type=checkbox]:checked').length;
+            if (checked > choice.chooseCount) {
+                e.target.checked = false;
+                alert(`You cannot choose more than ${choice.chooseCount} options.`);
+            }
+        });
+
+        container.appendChild(fieldset);
+    }
+
+    function renderEquipmentChoices(choices) {
+    equipmentContainer.innerHTML = '';
+
+    if (!choices.length) {
+        equipmentContainer.innerHTML = '<p>Brak danych wyposażenia.</p>';
+        return;
+    }
+
+    choices.forEach((choice, index) => {
+        const card = document.createElement('div');
+        card.className = 'card mb-3 shadow-sm p-3';
+
+        const title = document.createElement('h5');
+        title.textContent = choice.description;
+        card.appendChild(title);
+
+        const hint = document.createElement('p');
+        hint.className = 'text-muted';
+        hint.textContent = `Wybierz ${choice.chooseCount}`;
+        card.appendChild(hint);
+
+        const inputType = choice.chooseCount === 1 ? 'radio' : 'checkbox';
+
+        choice.itemSets.forEach((set, setIndex) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-check';
+
+            const input = document.createElement('input');
+            input.type = inputType;
+            input.name = `choice_${index}`;
+            input.id = `opt_${index}_${setIndex}`;
+            input.className = 'form-check-input me-2';
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.className = 'form-check-label';
+
+            // Jeśli zestaw ma listę przedmiotów (np. miecz i 20 strzał)
+            if (set.items && set.items.length > 0) {
+                // Sprawdź, czy to "dowolna kategoria" (czyli z kontrolera: sets.Add(ItemSet z ChooseCount=0))
+                if (set.chooseCount === 0) {
+                    // wybór z kategorii
+                    const categorySelect = document.createElement('select');
+                    categorySelect.className = 'form-select d-inline-block ms-2';
+                    categorySelect.style.width = 'auto';
+
+                    const loadingOption = document.createElement('option');
+                    loadingOption.textContent = 'Ładowanie...';
+                    categorySelect.appendChild(loadingOption);
+
+                    // Ustal nazwę kategorii z pierwszego elementu
+                    //const categoryName = set.items[0]?.name;
+                    GetCategoryItems(set, categorySelect);
+
+                    categorySelect.addEventListener('change', () => {
+                        input.checked = true;
+                        input.value = categorySelect.value;
+                    });
+
+                    //label.textContent = `${categoryName}: `;
+                    label.appendChild(categorySelect);
+                } else if (set.chooseCount === 1){
+                    // zwykły zestaw — np. "rapier" albo "shortbow ×1, arrows ×20"
+                    const itemNames = set.items
+                        .map(it => `${it.name} ×${it.quantity}`)
+                        .join(', ');
+                    label.textContent = itemNames;
+                    input.value = itemNames;
+                } else if (set.chooseCount > 1){
+                    const multiContainer = document.createElement('div');
+    multiContainer.className = 'ms-3 mt-2';
+
+    const hint = document.createElement('small');
+    hint.className = 'text-muted d-block mb-1';
+    hint.textContent = `Wybierz ${set.chooseCount} przedmiot(y):`;
+    multiContainer.appendChild(hint);
+
+    set.items.forEach((it, i) => {
+        const optionWrapper = document.createElement('div');
+        optionWrapper.className = 'form-check';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input';
+        checkbox.id = `multi_${index}_${setIndex}_${i}`;
+        checkbox.value = it.name;
+        checkbox.name = `multi_choice_${index}_${setIndex}`;
+
+        const label2 = document.createElement('label');
+        label2.htmlFor = checkbox.id;
+        label2.className = 'form-check-label';
+        label2.textContent = `${it.name} ×${it.quantity}`;
+
+        optionWrapper.appendChild(checkbox);
+        optionWrapper.appendChild(label2);
+        multiContainer.appendChild(optionWrapper);
+    });
+
+    // kontrola liczby zaznaczeń
+    multiContainer.addEventListener('change', () => {
+        const checked = multiContainer.querySelectorAll('input[type="checkbox"]:checked');
+        if (checked.length > set.chooseCount) {
+            // jeśli użytkownik wybrał za dużo – odznacz ostatni
+            checked[checked.length - 1].checked = false;
+            alert(`Możesz wybrać maksymalnie ${set.chooseCount} przedmiot(y).`);
+        }
+
+        // jeśli cokolwiek zaznaczone — ustaw główny input jako checked
+        input.checked = checked.length > 0;
+        input.value = Array.from(checked).map(c => c.value).join(', ');
+    });
+
+    label.appendChild(multiContainer);
+                }
+            }
+
+            wrapper.appendChild(input);
+            wrapper.appendChild(label);
+            card.appendChild(wrapper);
+        });
+
+        equipmentContainer.appendChild(card);
+    });
+}
+
+
+async function GetCategoryItems(set, selectEl) {
+    try {
+        selectEl.innerHTML = '';
+        set.items.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.name;
+            opt.textContent = item.name;
+            selectEl.appendChild(opt);
+        });
+    } catch (err) {
+        selectEl.innerHTML = '';
+        const opt = document.createElement('option');
+        opt.textContent = 'Nie udało się pobrać opcji';
+        selectEl.appendChild(opt);
+        //console.log("ERROR = " + err);
+    }
+}
+
+
+    const classSelect = document.getElementById('classSelect');
+    const proficiencyContainer = document.getElementById('proficiencyContainer');
+    const equipmentContainer = document.getElementById('equipmentContainer');
+    
+    classSelect.addEventListener('change', async () => {
+        const className = classSelect.value;
+        proficiencyContainer.innerHTML = '';
+        equipmentContainer.innerHTML = '';
+
+        if (!className) return;
+
+        const prof_response = await fetch(`/Character/GetProficiencies2?className=${className}`);
+        if (!prof_response.ok) {
+            proficiencyContainer.innerHTML = `<p class="text-danger">Nie udało się pobrać danych.</p>`;
+            return;
+        }
+        const prof_choices = await prof_response.json();
+        prof_choices.forEach((choice, index) => {
+            generateFieldsets(proficiencyContainer, choice, index);
+        });
+
+        const equip_reponse = await fetch(`/Character/GetItems?className=${className}`);
+
+        if (!equip_reponse.ok) {
+            equipmentContainer.innerHTML = `<p class="text-danger">Nie udało się pobrać danych.</p>`;
+            return;
+        }
+        const equip_choices = await equip_reponse.json();
+        renderEquipmentChoices(equip_choices);
+    });
+
+    const form = document.getElementById('characterForm');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fieldsets = document.querySelectorAll('#proficiencyContainer fieldset');
+        const proficiencies = [];
+
+        var character = {
+            name: document.getElementById('name').value,
+            class: document.getElementById('classSelect').value,
+            race: document.getElementById('race').value,
+            alignment: document.getElementById('alignment').value,
+            strength: parseInt(document.getElementById('str').value),
+            dexterity: parseInt(document.getElementById('dex').value),
+            constitution: parseInt(document.getElementById('con').value),
+            wisdom: parseInt(document.getElementById('wis').value),
+            intelligence: parseInt(document.getElementById('int').value),
+            charisma: parseInt(document.getElementById('cha').value)
+        };
+
+        fieldsets.forEach(fs => {
+            const selected = Array.from(fs.querySelectorAll('input[type=checkbox]:checked')).map(c => c.value);
+
+            selected.forEach(choice => {
+                proficiencies.push(choice);
+            });
+        });
+
+        const payload = {
+            character,
+            proficiencies
+        };
+
+        await fetch('/Character/Add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+            window.location.href = data.redirectUrl;
+            } else {
+            alert("Server internal error 500");
+            }
+        })
+        .catch(err => console.error("Server error:", err));;
+            });
+</script>
+}

@@ -79,12 +79,12 @@
     }
 
     <h4>Items</h4>
-    @if (Model.CharacterItems != null && Model.CharacterItems.Any())
+    @if (Model.Items != null && Model.Items.Any())
     {
         <ul>
-            @foreach (var item in Model.CharacterItems)
+            @foreach (var item in Model.Items)
             {
-                <li>@item.ItemId</li>
+                <li>@item.Id</li>
             }
         </ul>
     }
