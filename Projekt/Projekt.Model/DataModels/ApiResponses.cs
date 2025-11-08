@@ -76,6 +76,7 @@ public class CharacterRequest
 {
     public Character Character { get; set; }
     public List<string> Proficiencies { get; set; } = new();
+    public List<Item> Items { get; set; } = new();
 }
 
 public class ItemChoiceModel
@@ -91,9 +92,13 @@ public class ItemChoiceModel
         foreach (var set in this.ItemSets)
         {
             Console.WriteLine("Set no. : " + i);
-            foreach (var item in set.Items)
+            foreach (var item in set.RegularItems)
             {
-                Console.WriteLine("Item: " + item.Name + " x " + item.Quantity);
+                Console.WriteLine("Item Regular: " + item.Name + " x " + item.Quantity);
+            }
+            foreach (var item in set.CategoryItems)
+            {
+                Console.WriteLine("Item Category: " + item.Name + " x " + item.Quantity);
             }
             i++;
         }
@@ -102,8 +107,10 @@ public class ItemChoiceModel
 
 public class ItemSet
 {
-    public int ChooseCount { get; set; } = 0;
-    public List<ItemModel> Items { get; set; }
+    public int RegularCount { get; set; } = 0;
+    public int CategoryCount { get; set; } = 0;
+    public List<ItemModel> RegularItems { get; set; } = new List<ItemModel>();
+    public List<ItemModel> CategoryItems { get; set; } = new List<ItemModel>();
 }
 
 public class ItemModel

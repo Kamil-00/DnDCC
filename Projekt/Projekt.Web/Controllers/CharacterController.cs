@@ -173,6 +173,20 @@ namespace Projekt.Web.Controllers
             }
 
             request.Character.ArmorClass = 10 + (int)((request.Character.Dexterity - 10) / 2);
+            if (request.Items != null && request.Items.Any())
+            {
+                request.Character.Items = new List<Item>();
+
+                foreach (var item in request.Items)
+                {
+                    request.Character.Items.Add(new Item
+                    {
+                        Name = item.Name,
+                        Quantity = item.Quantity
+                    });
+                }
+            }
+
             characterService.SaveCharacter(request.Character);
             return Ok(new { success = true, redirectUrl = Url.Action("Index") });
         }
@@ -193,6 +207,7 @@ namespace Projekt.Web.Controllers
 
             foreach (var choice in proficiencyChoices.EnumerateArray())
             {
+
                 var desc = choice.GetProperty("desc").GetString();
                 var choose = choice.GetProperty("choose").GetInt32();
                 var from = choice.GetProperty("from");
@@ -202,14 +217,28 @@ namespace Projekt.Web.Controllers
 
                 foreach (var option in options.EnumerateArray())
                 {
-                    var item = option.GetProperty("item");
-                    optionsList.Add(
-                        new OptionModel
-                        {
-                            Text = item.GetProperty("name").GetString(),
-                            Value = item.GetProperty("index").GetString(),
+                    if (option.GetProperty("option_type").GetString() == "choice") {
+                        var options2 = option.GetProperty("choice").GetProperty("from").GetProperty("options");
+                        foreach (var option2 in options2.EnumerateArray()) {
+                            var item2 = option2.GetProperty("item");
+                            optionsList.Add(
+                                new OptionModel
+                                {
+                                    Text = item2.GetProperty("name").GetString(),
+                                    Value = item2.GetProperty("index").GetString(),
+                                }
+                            );
                         }
-                    );
+                    } else {
+                        var item = option.GetProperty("item");
+                        optionsList.Add(
+                            new OptionModel
+                            {
+                                Text = item.GetProperty("name").GetString(),
+                                Value = item.GetProperty("index").GetString(),
+                            }
+                        );
+                    }
                 }
                 choices.Add(
                     new ChoiceModel
@@ -314,7 +343,7 @@ namespace Projekt.Web.Controllers
                     // Select any from melee weapons
                     var category = from.GetProperty("equipment_category").GetProperty("index"); // Any simple weapon
                     List<ItemModel> items = await GetItemsByCategory(category.GetString());
-                    ItemSet set = new ItemSet { ChooseCount = 0, Items = items };
+                    ItemSet set = new ItemSet { CategoryCount = 1, CategoryItems = items };
                     sets.Add(set);
 
                 } else if (options_set_type.GetString() == "options_array") {
@@ -327,40 +356,44 @@ namespace Projekt.Web.Controllers
                         var option_type = option.GetProperty("option_type");
                         
                         if (option_type.GetString() == "multiple") {
-                            var itemSet = new ItemSet() { ChooseCount = 1, Items = new List<ItemModel>() };
+                            var itemSet = new ItemSet();
                             var multiple_items = option.GetProperty("items");
                             foreach (var _item in multiple_items.EnumerateArray()) {
                                 if (_item.GetProperty("option_type").ToString() == "choice") {
                                     var category = _item.GetProperty("choice").GetProperty("from").GetProperty("equipment_category").GetProperty("index");
+                                    var chooseCount =  _item.GetProperty("choice").GetProperty("choose").GetInt32();
                                     List<ItemModel> items = await GetItemsByCategory(category.GetString());
                                     //ItemSet set = new ItemSet { ChooseCount = 0, Items = items };
-                                    itemSet.ChooseCount++;
-                                    itemSet.Items.AddRange(items);
+                                    itemSet.CategoryCount = chooseCount;
+                                    itemSet.CategoryItems.AddRange(items);
                                 } else if (_item.GetProperty("option_type").ToString() == "counted_reference") {
                                     var item = new ItemModel {
                                         Quantity = Int32.Parse(_item.GetProperty("count").ToString()),
                                         Name = _item.GetProperty("of").GetProperty("index").ToString(),
                                     };
-                                    itemSet.Items.Add(item);
+                                    itemSet.RegularItems.Add(item);
+                                    itemSet.RegularCount = 1;
                                 }
                             }
                             sets.Add(itemSet);
                         }
                         else if (option_type.GetString() == "counted_reference")
                         {
-                            var itemSet = new ItemSet { ChooseCount = 1, Items = new List<ItemModel>() };
-                            itemSet.Items.Add(
+                            var itemSet = new ItemSet();
+                            itemSet.RegularItems.Add(
                                 new ItemModel
                                 {
                                     Name = option.GetProperty("of").GetProperty("index").GetString(), //Crossbow, light  ||  Bolts
                                     Quantity = option.GetProperty("count").GetInt32(), // 1 || 20
                                 }
                             );
+                            itemSet.RegularCount = 1;
                             sets.Add(itemSet);
                         }
                         else if (option_type.GetString() == "choice")
                         {
                             var item = option.GetProperty("choice").GetProperty("from");
+                            var chooseCount =  option.GetProperty("choice").GetProperty("choose").GetInt32();
                             var option_set_type = item.GetProperty("option_set_type");
                             Console.WriteLine("Option set type: " + option_set_type.GetString());
                             if (option_set_type.GetString() == "equipment_category")
@@ -368,7 +401,7 @@ namespace Projekt.Web.Controllers
                                 var category = item.GetProperty("equipment_category").GetProperty("index");
                                 Console.WriteLine("category: " + category);
                                 List<ItemModel> items = await GetItemsByCategory(category.GetString());
-                                ItemSet set = new ItemSet { ChooseCount = 0, Items = items };
+                                ItemSet set = new ItemSet { CategoryCount = chooseCount, CategoryItems = items };
                                 Console.WriteLine("items count: " + items.Count);
                                 sets.Add(set);
                             }

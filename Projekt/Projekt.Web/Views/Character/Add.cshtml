@@ -122,13 +122,47 @@
             label.className = 'form-check-label';
 
             // Jeśli zestaw ma listę przedmiotów (np. miecz i 20 strzał)
-            if (set.items && set.items.length > 0) {
+            if ((set.categoryItems && set.categoryItems.length > 0) || (set.regularItems && set.regularItems.length > 0)) {
                 // Sprawdź, czy to "dowolna kategoria" (czyli z kontrolera: sets.Add(ItemSet z ChooseCount=0))
-                if (set.chooseCount === 0) {
+                if (set.categoryCount > 0 && set.regularCount > 0) {
+                    const categorySelect = document.createElement('select');
+                    categorySelect.className = 'form-select d-inline-block ms-2';
+                    categorySelect.style.width = 'auto';
+                    if (set.categoryCount > 1) {
+                        categorySelect.multiple = true;
+                        categorySelect.size = set.categoryCount;
+                    }
+
+                    const loadingOption = document.createElement('option');
+                    loadingOption.textContent = 'Ładowanie...';
+                    categorySelect.appendChild(loadingOption);
+
+                    GetCategoryItems(set.categoryItems, categorySelect);
+
+                    categorySelect.addEventListener('change', () => {
+                        input.checked = true;
+                        input.value = categorySelect.value;
+                    });
+
+                    // najpierw wypisz nazwę przedmiotów
+                    const itemNames = set.regularItems
+                        .map(it => `${it.name} ×${it.quantity}`)
+                        .join(', ');
+
+                    // zamiast textContent (które usuwa select), użyj append
+                    label.textContent = `${itemNames}: `;
+                    label.appendChild(categorySelect);
+                }
+                else if (set.categoryCount > 0) {
+                    console.log("CategoryCount > 0 " + set.categoryCount);
                     // wybór z kategorii
                     const categorySelect = document.createElement('select');
                     categorySelect.className = 'form-select d-inline-block ms-2';
                     categorySelect.style.width = 'auto';
+                    if (set.categoryCount > 1) {
+                        categorySelect.multiple = true;
+                        categorySelect.size = set.categoryCount;
+                    }
 
                     const loadingOption = document.createElement('option');
                     loadingOption.textContent = 'Ładowanie...';
@@ -136,7 +170,7 @@
 
                     // Ustal nazwę kategorii z pierwszego elementu
                     //const categoryName = set.items[0]?.name;
-                    GetCategoryItems(set, categorySelect);
+                    GetCategoryItems(set.categoryItems, categorySelect);
 
                     categorySelect.addEventListener('change', () => {
                         input.checked = true;
@@ -145,58 +179,16 @@
 
                     //label.textContent = `${categoryName}: `;
                     label.appendChild(categorySelect);
-                } else if (set.chooseCount === 1){
+                }
+                else if (set.regularCount > 0){
+                    console.log("RegularCount > 0 " + set.regularCount);
                     // zwykły zestaw — np. "rapier" albo "shortbow ×1, arrows ×20"
-                    const itemNames = set.items
+                    const itemNames = set.regularItems
                         .map(it => `${it.name} ×${it.quantity}`)
                         .join(', ');
+                    console.log(set.regularItems);
                     label.textContent = itemNames;
                     input.value = itemNames;
-                } else if (set.chooseCount > 1){
-                    const multiContainer = document.createElement('div');
-    multiContainer.className = 'ms-3 mt-2';
-
-    const hint = document.createElement('small');
-    hint.className = 'text-muted d-block mb-1';
-    hint.textContent = `Wybierz ${set.chooseCount} przedmiot(y):`;
-    multiContainer.appendChild(hint);
-
-    set.items.forEach((it, i) => {
-        const optionWrapper = document.createElement('div');
-        optionWrapper.className = 'form-check';
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'form-check-input';
-        checkbox.id = `multi_${index}_${setIndex}_${i}`;
-        checkbox.value = it.name;
-        checkbox.name = `multi_choice_${index}_${setIndex}`;
-
-        const label2 = document.createElement('label');
-        label2.htmlFor = checkbox.id;
-        label2.className = 'form-check-label';
-        label2.textContent = `${it.name} ×${it.quantity}`;
-
-        optionWrapper.appendChild(checkbox);
-        optionWrapper.appendChild(label2);
-        multiContainer.appendChild(optionWrapper);
-    });
-
-    // kontrola liczby zaznaczeń
-    multiContainer.addEventListener('change', () => {
-        const checked = multiContainer.querySelectorAll('input[type="checkbox"]:checked');
-        if (checked.length > set.chooseCount) {
-            // jeśli użytkownik wybrał za dużo – odznacz ostatni
-            checked[checked.length - 1].checked = false;
-            alert(`Możesz wybrać maksymalnie ${set.chooseCount} przedmiot(y).`);
-        }
-
-        // jeśli cokolwiek zaznaczone — ustaw główny input jako checked
-        input.checked = checked.length > 0;
-        input.value = Array.from(checked).map(c => c.value).join(', ');
-    });
-
-    label.appendChild(multiContainer);
                 }
             }
 
@@ -210,10 +202,10 @@
 }
 
 
-async function GetCategoryItems(set, selectEl) {
+async function GetCategoryItems(categoryItems, selectEl) {
     try {
         selectEl.innerHTML = '';
-        set.items.forEach(item => {
+        categoryItems.forEach(item => {
             const opt = document.createElement('option');
             opt.value = item.name;
             opt.textContent = item.name;
@@ -289,9 +281,21 @@ async function GetCategoryItems(set, selectEl) {
             });
         });
 
+        const equipmentChoices = [];
+        document.querySelectorAll('#equipmentContainer .card').forEach((card, index) => {
+            const selectedInputs = card.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked');
+            selectedInputs.forEach(input => {
+                equipmentChoices.push({
+                    name: input.value, // nazwa przedmiotu
+                    quantity: 1        // możesz później rozszerzyć o wybór ilości
+                });
+            });
+        });
+
         const payload = {
             character,
-            proficiencies
+            proficiencies,
+            items: equipmentChoices
         };
 
         await fetch('/Character/Add', {
