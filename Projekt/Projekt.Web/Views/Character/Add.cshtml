@@ -9,7 +9,7 @@
 <form id="characterForm" asp-action="Add" method="post">
     <div class="form-group">
         <label asp-for="Name"></label>
-        <input id="name" asp-for="Name" class="form-control" />
+        <input id="name" asp-for="Name" class="form-control" value="MojaPostac"/>
     </div>
 
     <div class="form-group">
@@ -28,12 +28,12 @@
     </div>
 
     <div class="form-row">
-        <div class="col"><label asp-for="Strength"></label><input id="str" asp-for="Strength" class="form-control" /></div>
-        <div class="col"><label asp-for="Dexterity"></label><input id="dex" asp-for="Dexterity" class="form-control" /></div>
-        <div class="col"><label asp-for="Constitution"></label><input id="con" asp-for="Constitution" class="form-control" /></div>
-        <div class="col"><label asp-for="Intelligence"></label><input id="int" asp-for="Intelligence" class="form-control" /></div>
-        <div class="col"><label asp-for="Wisdom"></label><input id="wis" asp-for="Wisdom" class="form-control" /></div>
-        <div class="col"><label asp-for="Charisma"></label><input id="cha" asp-for="Charisma" class="form-control" /></div>
+        <div class="col"><label asp-for="Strength"></label><input id="str" asp-for="Strength" class="form-control" value="10" /></div>
+        <div class="col"><label asp-for="Dexterity"></label><input id="dex" asp-for="Dexterity" class="form-control" value="10" /></div>
+        <div class="col"><label asp-for="Constitution"></label><input id="con" asp-for="Constitution" class="form-control" value="10" /></div>
+        <div class="col"><label asp-for="Intelligence"></label><input id="int" asp-for="Intelligence" class="form-control" value="10" /></div>
+        <div class="col"><label asp-for="Wisdom"></label><input id="wis" asp-for="Wisdom" class="form-control" value="10" /></div>
+        <div class="col"><label asp-for="Charisma"></label><input id="cha" asp-for="Charisma" class="form-control" value="10" /></div>
     </div>
 
     <div id="proficiencyContainer"></div>
@@ -138,10 +138,30 @@
                     categorySelect.appendChild(loadingOption);
 
                     GetCategoryItems(set.categoryItems, categorySelect);
+                    categorySelect.selectedIndex = 0;
+                    input.value = categorySelect.options[0].value;
+                    
+                    /*input.addEventListener('change', () => {
+                        if (input.checked && !input.value) {
+                            input.value = categorySelect.options[categorySelect.selectedIndex]?.value || '';
+                        }
+                        console.log("Input: " + input.value);
+                    });*/
+                    input.addEventListener('change', () => {
+                        if (input.checked && !input.value) {
+                            input.value = categorySelect.options[categorySelect.selectedIndex]?.value || '';
+                        }
+                        //console.log("Changed!: ");
+                    });
 
                     categorySelect.addEventListener('change', () => {
                         input.checked = true;
-                        input.value = categorySelect.value;
+                        if (categorySelect.multiple) {
+                            const values = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
+                            input.value = values.join(', ');
+                        } else {
+                            input.value = categorySelect.value;
+                        }
                     });
 
                     // najpierw wypisz nazwę przedmiotów
@@ -154,7 +174,7 @@
                     label.appendChild(categorySelect);
                 }
                 else if (set.categoryCount > 0) {
-                    console.log("CategoryCount > 0 " + set.categoryCount);
+                    //console.log("CategoryCount > 0 " + set.categoryCount);
                     // wybór z kategorii
                     const categorySelect = document.createElement('select');
                     categorySelect.className = 'form-select d-inline-block ms-2';
@@ -171,22 +191,39 @@
                     // Ustal nazwę kategorii z pierwszego elementu
                     //const categoryName = set.items[0]?.name;
                     GetCategoryItems(set.categoryItems, categorySelect);
+                    categorySelect.selectedIndex = 0;
+                    input.value = categorySelect.options[0].value;
 
+                    input.addEventListener('change', () => {
+                        if (input.checked && !input.value) {
+                            input.value = categorySelect.options[categorySelect.selectedIndex]?.value || '';
+                        }
+                        //console.log("Changed!: ");
+                    });
+                    
                     categorySelect.addEventListener('change', () => {
                         input.checked = true;
-                        input.value = categorySelect.value;
+                        if (categorySelect.multiple) {
+                            //input.value = categorySelect.value;
+                            const values = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
+                            console.log(values);
+                            console.log(values.join(' ×1, ') + " ×1");
+                            input.value = values.join(' ×1, ') + " ×1";
+                        } else {
+                            input.value = categorySelect.value;
+                        }
                     });
 
                     //label.textContent = `${categoryName}: `;
                     label.appendChild(categorySelect);
                 }
                 else if (set.regularCount > 0){
-                    console.log("RegularCount > 0 " + set.regularCount);
+                    //console.log("RegularCount > 0 " + set.regularCount);
                     // zwykły zestaw — np. "rapier" albo "shortbow ×1, arrows ×20"
                     const itemNames = set.regularItems
                         .map(it => `${it.name} ×${it.quantity}`)
                         .join(', ');
-                    console.log(set.regularItems);
+                    //console.log(set.regularItems);
                     label.textContent = itemNames;
                     input.value = itemNames;
                 }

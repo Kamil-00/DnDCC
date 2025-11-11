@@ -41,6 +41,10 @@ namespace Projekt.Web.Controllers
             return View(characters);
         }
 
+        public string ClearSpaces(string sentence){
+            return sentence.Replace(" ", "");
+        }
+
         public async Task<IActionResult> Details(int id)
         {
             var character = characterService.GetCharacter(id);
@@ -173,17 +177,54 @@ namespace Projekt.Web.Controllers
             }
 
             request.Character.ArmorClass = 10 + (int)((request.Character.Dexterity - 10) / 2);
+            
+            request.Character.Items = new List<Item>();
+
+            if (doc2.RootElement.TryGetProperty("starting_equipment", out var eqArray))
+            {
+                foreach (var eq in eqArray.EnumerateArray())
+                {
+                    var itemName = eq.GetProperty("equipment").GetProperty("index").GetString();
+                    var itemQuantity = eq.GetProperty("quantity").GetInt32();
+                    request.Character.Items.Add(new Item { Name = itemName, Quantity = itemQuantity});
+                }
+            }
+            
             if (request.Items != null && request.Items.Any())
             {
-                request.Character.Items = new List<Item>();
-
+                
+                Console.WriteLine("Character Items");
                 foreach (var item in request.Items)
                 {
-                    request.Character.Items.Add(new Item
-                    {
-                        Name = item.Name,
-                        Quantity = item.Quantity
-                    });
+                    if (item.Name.Contains(",")) {
+                        string[] itemParts = item.Name.Split(',');
+                        foreach(var subItem in itemParts) {
+                            string[] parts = subItem.Split('×');
+                            var subItemName = ClearSpaces(parts[0]);
+                            var subItemQuantity = Int32.Parse(ClearSpaces(parts[1]));
+                            
+                            request.Character.Items.Add(new Item
+                            {
+                                Name = subItemName,
+                                Quantity = subItemQuantity
+                            });
+                            Console.WriteLine("item: " + subItemName + " Quantity: " + subItemQuantity);
+                        }
+                    } else {
+                        if (item.Name.Contains("×")) {
+                            string[] parts = item.Name.Split('×');
+                            item.Name = ClearSpaces(parts[0]);
+                            item.Quantity = Int32.Parse(ClearSpaces(parts[1]));
+                        }
+
+                        request.Character.Items.Add(new Item
+                        {
+                            Name = item.Name,
+                            Quantity = item.Quantity
+                        });
+                        
+                        Console.WriteLine("item: " + item.Name + " Quantity: " + item.Quantity);
+                    }
                 }
             }
 
