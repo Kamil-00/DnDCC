@@ -1,0 +1,39 @@
+@model IEnumerable<Projekt.Model.DataModels.Character>
+
+@{
+    ViewData["Title"] = "Characters";
+}
+
+<h2>Characters</h2>
+
+<p>
+    <a class="btn btn-primary" href="@Url.Action("Add", "Character")">Add New Character</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Race</th>
+            <th>HP</th>
+            <th>Speed</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var c in Model)
+    {
+        <tr>
+            <td>@c.Name</td>
+            <td>@c.Class</td>
+            <td>@c.Race</td>
+            <td>@c.CurrentHP / @c.MaxHP</td>
+            <td>@c.Speed</td>
+            <td>
+                <a class="btn btn-info btn-sm" href="@Url.Action("Details", "Character", new { id = c.Id })">Details</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

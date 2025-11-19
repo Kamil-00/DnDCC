@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Projekt.DAL;
 
@@ -11,9 +12,11 @@ using Projekt.DAL;
 namespace Projekt.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251028170135_CharactersUpdate")]
+    partial class CharactersUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,6 +206,24 @@ namespace Projekt.DAL.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("Projekt.Model.DataModels.CharacterItem", b =>
+                {
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("CharacterId", "ItemId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("CharacterItem");
+                });
+
             modelBuilder.Entity("Projekt.Model.DataModels.Item", b =>
                 {
                     b.Property<int>("Id")
@@ -211,9 +232,6 @@ namespace Projekt.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -221,9 +239,18 @@ namespace Projekt.DAL.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("CharacterId");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Weight")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
 
                     b.ToTable("Item");
                 });
@@ -397,20 +424,33 @@ namespace Projekt.DAL.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Projekt.Model.DataModels.Item", b =>
+            modelBuilder.Entity("Projekt.Model.DataModels.CharacterItem", b =>
                 {
                     b.HasOne("Projekt.Model.DataModels.Character", "Character")
-                        .WithMany("Items")
+                        .WithMany("CharacterItems")
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Projekt.Model.DataModels.Item", "Item")
+                        .WithMany("CharacterItems")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Character");
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Projekt.Model.DataModels.Character", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("CharacterItems");
+                });
+
+            modelBuilder.Entity("Projekt.Model.DataModels.Item", b =>
+                {
+                    b.Navigation("CharacterItems");
                 });
 
             modelBuilder.Entity("Projekt.Model.DataModels.User", b =>

@@ -30,18 +30,11 @@ namespace Projekt.DAL
             .WithMany(u => u.Characters)
             .HasForeignKey(c=>c.UserId);
 
-            modelBuilder.Entity<CharacterItem>()
-                .HasKey(ci => new { ci.CharacterId, ci.ItemId });
 
-            modelBuilder.Entity<CharacterItem>()
-                .HasOne(ci => ci.Character)
-                .WithMany(c => c.CharacterItems)
-                .HasForeignKey(ci => ci.CharacterId);
-
-            modelBuilder.Entity<CharacterItem>()
-                .HasOne(ci => ci.Item)
-                .WithMany(i => i.CharacterItems)
-                .HasForeignKey(ci => ci.ItemId);
+            modelBuilder.Entity<Item>()
+                .HasOne(i => i.Character)
+                .WithMany(ch => ch.Items)
+                .HasForeignKey(i => i.CharacterId);
         }
     }
 }
