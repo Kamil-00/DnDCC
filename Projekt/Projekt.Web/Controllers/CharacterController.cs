@@ -42,7 +42,7 @@ namespace Projekt.Web.Controllers
         }
 
         public string ClearSpaces(string sentence){
-            return sentence.Replace(" ", "");
+            return sentence.Contains(" ") ? sentence.Replace(" ", "") : sentence;
         }
 
         public async Task<IActionResult> Details(int id)
@@ -184,7 +184,7 @@ namespace Projekt.Web.Controllers
             {
                 foreach (var eq in eqArray.EnumerateArray())
                 {
-                    var itemName = eq.GetProperty("equipment").GetProperty("index").GetString();
+                    var itemName = eq.GetProperty("equipment").GetProperty("name").GetString();
                     var itemQuantity = eq.GetProperty("quantity").GetInt32();
                     request.Character.Items.Add(new Item { Name = itemName, Quantity = itemQuantity});
                 }
@@ -196,11 +196,11 @@ namespace Projekt.Web.Controllers
                 Console.WriteLine("Character Items");
                 foreach (var item in request.Items)
                 {
-                    if (item.Name.Contains(",")) {
-                        string[] itemParts = item.Name.Split(',');
+                    if (item.Name.Contains(";")) {
+                        string[] itemParts = item.Name.Split(';');
                         foreach(var subItem in itemParts) {
                             string[] parts = subItem.Split('×');
-                            var subItemName = ClearSpaces(parts[0]);
+                            var subItemName = parts[0];
                             var subItemQuantity = Int32.Parse(ClearSpaces(parts[1]));
                             
                             request.Character.Items.Add(new Item
@@ -348,7 +348,7 @@ namespace Projekt.Web.Controllers
                 items.Add(
                     new ItemModel
                     {
-                        Name = item.GetProperty("index").GetString(),
+                        Name = item.GetProperty("name").GetString(),
                         Quantity = 1,
                     }
                 );
@@ -410,7 +410,7 @@ namespace Projekt.Web.Controllers
                                 } else if (_item.GetProperty("option_type").ToString() == "counted_reference") {
                                     var item = new ItemModel {
                                         Quantity = Int32.Parse(_item.GetProperty("count").ToString()),
-                                        Name = _item.GetProperty("of").GetProperty("index").ToString(),
+                                        Name = _item.GetProperty("of").GetProperty("name").ToString(),
                                     };
                                     itemSet.RegularItems.Add(item);
                                     itemSet.RegularCount = 1;
@@ -424,7 +424,7 @@ namespace Projekt.Web.Controllers
                             itemSet.RegularItems.Add(
                                 new ItemModel
                                 {
-                                    Name = option.GetProperty("of").GetProperty("index").GetString(), //Crossbow, light  ||  Bolts
+                                    Name = option.GetProperty("of").GetProperty("name").GetString(), //Crossbow, light  ||  Bolts
                                     Quantity = option.GetProperty("count").GetInt32(), // 1 || 20
                                 }
                             );

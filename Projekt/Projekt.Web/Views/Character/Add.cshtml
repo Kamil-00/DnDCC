@@ -9,7 +9,7 @@
 <form id="characterForm" asp-action="Add" method="post">
     <div class="form-group">
         <label asp-for="Name"></label>
-        <input id="name" asp-for="Name" class="form-control" value="MojaPostac"/>
+        <input id="name" asp-for="Name" class="form-control" value="Nazwa postaci"/>
     </div>
 
     <div class="form-group">
@@ -158,7 +158,7 @@
                         input.checked = true;
                         if (categorySelect.multiple) {
                             const values = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
-                            input.value = values.join(', ');
+                            input.value = values.join('; ');
                         } else {
                             input.value = categorySelect.value;
                         }
@@ -167,7 +167,7 @@
                     // najpierw wypisz nazwę przedmiotów
                     const itemNames = set.regularItems
                         .map(it => `${it.name} ×${it.quantity}`)
-                        .join(', ');
+                        .join('; ');
 
                     // zamiast textContent (które usuwa select), użyj append
                     label.textContent = `${itemNames}: `;
@@ -207,8 +207,8 @@
                             //input.value = categorySelect.value;
                             const values = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
                             console.log(values);
-                            console.log(values.join(' ×1, ') + " ×1");
-                            input.value = values.join(' ×1, ') + " ×1";
+                            console.log(values.join(' ×1; ') + " ×1");
+                            input.value = values.join(' ×1; ') + " ×1";
                         } else {
                             input.value = categorySelect.value;
                         }
@@ -222,7 +222,7 @@
                     // zwykły zestaw — np. "rapier" albo "shortbow ×1, arrows ×20"
                     const itemNames = set.regularItems
                         .map(it => `${it.name} ×${it.quantity}`)
-                        .join(', ');
+                        .join('; ');
                     //console.log(set.regularItems);
                     label.textContent = itemNames;
                     input.value = itemNames;
