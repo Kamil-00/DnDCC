@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using Projekt.Model.ApiResponses;
 using Projekt.Model.DataModels;
 using Projekt.Services.ConcreteServices;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace Projekt.Web.Controllers
 {
@@ -20,18 +22,21 @@ namespace Projekt.Web.Controllers
     {
         private readonly HttpClient _httpClient;
         protected readonly ICharacterService characterService;
+        private readonly IWebHostEnvironment _env;
 
         public CharacterController(
             IHttpClientFactory httpClientFactory,
             ICharacterService _characterService,
             ILogger logger,
             IMapper mapper,
-            IStringLocalizer localizer
+            IStringLocalizer localizer,
+            IWebHostEnvironment env
         )
             : base(logger, mapper, localizer)
         {
             _httpClient = httpClientFactory.CreateClient();
             characterService = _characterService;
+            _env = env;
         }
 
         public IActionResult Index()
@@ -136,6 +141,9 @@ namespace Projekt.Web.Controllers
         {
             var className = request.Character.Class;
             var raceName = request.Character.Race;
+            // zapewnij wartość SubClass żeby nie wpadło NULL do bazy
+            request.Character.SubClass = request.Character.SubClass ?? string.Empty;
+            request.Character.Spells = request.Character.Spells ?? string.Empty;
 
             request.Character.Proficiencies = request.Proficiencies;
 
@@ -230,6 +238,31 @@ namespace Projekt.Web.Controllers
 
             characterService.SaveCharacter(request.Character);
             return Ok(new { success = true, redirectUrl = Url.Action("Index") });
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            DeleteAvatarFiles(id);
+            characterService.DeleteCharacter(id);
+            return RedirectToAction("Index");
+        }
+
+        private void DeleteAvatarFiles(int characterId)
+        {
+            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+            var avatarDir = Path.Combine(webRoot, "images", "avatars");
+            if (!Directory.Exists(avatarDir)) return;
+
+            var stable = Path.Combine(avatarDir, $"avatar_{characterId}.png");
+            if (System.IO.File.Exists(stable))
+            {
+                try { System.IO.File.Delete(stable); } catch { }
+            }
+            foreach (var file in Directory.EnumerateFiles(avatarDir, $"avatar_{characterId}_*.png"))
+            {
+                try { System.IO.File.Delete(file); } catch { }
+            }
         }
 
         [HttpGet]

@@ -1,99 +1,136 @@
 @model Projekt.Model.DataModels.Character
-
 @{
-    ViewData["Title"] = "Character Details";
+    ViewData["Title"] = Model.Name;
+    var profs = ViewData["Proficiencies"] as IList<string> ?? new List<string>();
+    var traits = ViewData["Traits"] as IList<string> ?? new List<string>();
 }
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm uppercase tracking-wide text-amber-700">Karta postaci</p>
+            <h1 class="title-font text-3xl text-amber-900">@Model.Name</h1>
+            <p class="text-amber-800">@Model.Race • @Model.Class • @Model.Alignment</p>
+        </div>
+        <div class="text-right text-sm text-amber-900">
+            <div>HP: @Model.CurrentHP / @Model.MaxHP</div>
+            <div>AC: @Model.ArmorClass • Speed: @Model.Speed</div>
+        </div>
+    </div>
 
-<h2 class="mb-4">Character Details: @Model.Name</h2>
+    <div class="bg-amber-50 border border-amber-900/20 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+            <h3 class="title-font text-lg text-amber-900">Awatar</h3>
+            <p class="text-sm text-amber-800">Wygeneruj portret bohatera z DALL·E.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <img id="avatarPreview" src="/images/avatars/avatar_@(Model.Id).png" class="w-24 h-24 object-cover rounded-lg border border-amber-900/30 hidden" alt="Awatar">
+            <button id="generateAvatar" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold border border-amber-900/30">
+                Wygeneruj awatar
+            </button>
+        </div>
+    </div>
+    <div class="flex justify-end">
+        <form method="post" action="@Url.Action("Delete","Character")">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="px-4 py-2 rounded-lg text-sm border border-red-900/30 bg-red-100 text-red-800 hover:bg-red-200">
+                Usuń postać
+            </button>
+        </form>
+    </div>
 
-<div class="card p-4 shadow-sm">
-    <h4>Basic Information</h4>
-    <table class="table table-striped">
-        <tr><th>Name</th><td>@Model.Name</td></tr>
-        <tr><th>Alignment</th><td>@Model.Alignment</td></tr>
-        <tr><th>Race</th><td>@Model.Race</td></tr>
-        <tr><th>Class</th><td>@Model.Class</td></tr>
-    </table>
+    <div class="grid gap-3 md:grid-cols-3 text-sm">
+        <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-3">STR: @Model.Strength</div>
+        <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-3">DEX: @Model.Dexterity</div>
+        <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-3">CON: @Model.Constitution</div>
+        <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-3">INT: @Model.Intelligence</div>
+        <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-3">WIS: @Model.Wisdom</div>
+        <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-3">CHA: @Model.Charisma</div>
+    </div>
 
-    <h4>Attributes</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Strength</th>
-                <th>Dexterity</th>
-                <th>Constitution</th>
-                <th>Intelligence</th>
-                <th>Wisdom</th>
-                <th>Charisma</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@Model.Strength</td>
-                <td>@Model.Dexterity</td>
-                <td>@Model.Constitution</td>
-                <td>@Model.Intelligence</td>
-                <td>@Model.Wisdom</td>
-                <td>@Model.Charisma</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="grid gap-4 md:grid-cols-2">
+        <div>
+            <h3 class="title-font text-lg text-amber-900 mb-2">Proficiencje</h3>
+            <div class="flex flex-wrap gap-2 text-sm">
+                @foreach (var p in profs) { <span class="px-3 py-1 bg-amber-100 text-amber-900 rounded-full border border-amber-900/20">@p</span> }
+            </div>
+        </div>
+        <div>
+            <h3 class="title-font text-lg text-amber-900 mb-2">Cechy rasowe</h3>
+            <div class="flex flex-wrap gap-2 text-sm">
+                @foreach (var t in traits) { <span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full border border-emerald-900/10">@t</span> }
+            </div>
+        </div>
+    </div>
 
-    <h4>Combat Stats</h4>
-    <table class="table table-striped">
-        <tr><th>Max HP</th><td>@Model.MaxHP</td></tr>
-        <tr><th>Current HP</th><td>@Model.CurrentHP</td></tr>
-        <tr><th>Temporary HP</th><td>@Model.TemporaryHP</td></tr>
-        <tr><th>Armor Class</th><td>@Model.ArmorClass</td></tr>
-        <tr><th>Speed</th><td>@Model.Speed</td></tr>
-    </table>
-
-    <h4>Proficiencies</h4>
-    @if (Model.Proficiencies != null && Model.Proficiencies.Any())
-    {
-        <ul>
-            @foreach (var prof in ViewData["Proficiencies"] as IList<string>)
-            {
-                <li>@prof</li>
-            }
+    <div>
+        <h3 class="title-font text-lg text-amber-900 mb-2">Ekwipunek</h3>
+        <ul class="space-y-1 text-sm">
+        @foreach (var item in Model.Items) {
+            <li class="flex justify-between bg-amber-50 border border-amber-900/15 rounded px-3 py-2">
+                <span>@item.Name</span>
+                <span class="text-amber-800">x @item.Quantity</span>
+            </li>
+        }
         </ul>
-    }
-    else
-    {
-        <p class="text-muted">No proficiencies.</p>
-    }
-
-    <h4>Traits</h4>
-    @if (Model.Traits != null && Model.Traits.Any())
-    {
-        <ul>
-            @foreach (var trait in ViewData["Traits"] as IList<string>)
-            {
-                <li>@trait</li>
-            }
-        </ul>
-    }
-    else
-    {
-        <p class="text-muted">No traits.</p>
-    }
-
-    <h4>Items</h4>
-    @if (Model.Items != null && Model.Items.Any())
-    {
-        <ul>
-            @foreach (var item in Model.Items)
-            {
-                <li>@item.Name</li>
-            }
-        </ul>
-    }
-    else
-    {
-        <p class="text-muted">No items.</p>
-    }
-
-    <div class="mt-3">
-        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    const avatarBtn = document.getElementById('generateAvatar');
+    const avatarImg = document.getElementById('avatarPreview');
+
+    // pokaż istniejący stabilny plik, jeśli dostępny
+    avatarImg.addEventListener('load', () => {
+        avatarImg.classList.remove('hidden');
+        if (avatarBtn) avatarBtn.classList.add('hidden');
+    });
+    avatarImg.addEventListener('error', () => {
+        avatarImg.classList.add('hidden');
+        if (avatarBtn) avatarBtn.classList.remove('hidden');
+    });
+
+    avatarBtn?.addEventListener('click', async () => {
+        avatarBtn.disabled = true;
+        avatarBtn.textContent = 'Generowanie...';
+        try {
+            const res = await fetch('/api/avatar/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ characterId: @Model.Id })
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                let friendly = 'Nie udało się wygenerować awatara.';
+                const lower = txt.toLowerCase();
+                if (lower.includes('billing_hard_limit_reached')) {
+                    friendly = 'Limit rozliczeń OpenAI został wyczerpany. Uzupełnij saldo i spróbuj ponownie.';
+                } else if (lower.includes('invalid api key')) {
+                    friendly = 'Klucz OpenAI jest nieprawidłowy lub wygasł.';
+                } else if (lower.includes('model') && lower.includes('not found')) {
+                    friendly = 'Model nie jest dostępny na Twoim koncie.';
+                } else if (lower.includes('must be verified') && lower.includes('gpt-image-1')) {
+                    friendly = 'Aby korzystać z gpt-image-1 (generowanie obrazów), zweryfikuj organizację w ustawieniach OpenAI i poczekaj do 15 minut.';
+                } else {
+                    friendly = `Błąd ${res.status}: ${txt}`;
+                }
+                alert(friendly);
+                console.error('Avatar error status:', res.status);
+                console.error('Avatar error body:', txt);
+                return;
+            }
+            const data = await res.json();
+            if (data.url) {
+                avatarImg.src = data.url;
+                avatarImg.classList.remove('hidden');
+                avatarBtn.classList.add('hidden');
+            }
+        } catch (e) {
+            alert('Problem z połączeniem do AI.');
+        } finally {
+            avatarBtn.disabled = false;
+            avatarBtn.textContent = 'Wygeneruj awatar';
+        }
+    });
+</script>
+}

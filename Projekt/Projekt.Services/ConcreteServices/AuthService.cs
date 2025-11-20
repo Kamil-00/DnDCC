@@ -1,14 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Projekt.Model.DataModels;
 using Projekt.Services.Interfaces;
 using Projekt.ViewModel.VM;
-using Microsoft.Extensions.Logging;
 
 namespace Projekt.Services.ConcreteServices;
 
@@ -17,14 +15,12 @@ public class AuthService : IAuthService
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
     private readonly IConfiguration _config;
-    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(UserManager<User> userManager, RoleManager<Role> roleManager, IConfiguration config, ILogger<AuthService> logger)
+    public AuthService(UserManager<User> userManager, RoleManager<Role> roleManager, IConfiguration config)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _config = config;
-        _logger = logger;
     }
 
     public async Task<(bool Success, string? Error, AuthResultVm? Result)> RegisterAsync(RegisterUserVm input, string role = "User")
@@ -109,55 +105,4 @@ public class AuthService : IAuthService
             IsPremium = user.IsPremium
         };
     }
-
-    public async Task<(bool success, string? error)> SendPasswordResetTokenAsync(ForgotPasswordVm vm)
-    {
-        var user = await _userManager.FindByEmailAsync(vm.Email);
-        if (user is null)
-        {
-            _logger.LogInformation("Password reset requested (email not found): {email}", vm.Email);
-            return (true, null);
-        }
-
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-        var urlEncoded = HttpUtility.UrlEncode(token);
-
-        Console.WriteLine("[Password Reset]");
-        Console.WriteLine($"User: {user.UserName}");
-        Console.WriteLine($"Token: {token}");
-        
-        _logger.LogInformation("Password reset token generated for {user}", user.UserName);
-        return (true, null);
-    }
-
-    public async Task<(bool success, string? error)> ResetPasswordAsync(ResetPasswordVm vm)
-    {
-        var user = vm.UserNameOrEmail.Contains('@')
-            ? await _userManager.FindByEmailAsync(vm.UserNameOrEmail)
-            : await _userManager.FindByNameAsync(vm.UserNameOrEmail);
-
-        if (user is null) return (true, null);
-
-        var result = await _userManager.ResetPasswordAsync(user, vm.Token, vm.NewPassword);
-        if (!result.Succeeded)
-        {
-            var error = string.Join("; ", result.Errors.Select(e => e.Description));
-            _logger.LogWarning("Password reset failed for {user}: {error}", vm.UserNameOrEmail, error);
-            return (false, error);
-        }
-        _logger.LogInformation("Password reset succeeded for {user}", vm.UserNameOrEmail);
-        return (true, null);
-    }
-
-    private async Task<User?> FindByUserNameOrEmailAsync(string userNameOrEmail)
-    {
-        User? user = null;
-        if (userNameOrEmail.Contains('@'))
-            user = await _userManager.FindByEmailAsync(userNameOrEmail);
-        if (user is null)
-            user = await _userManager.FindByNameAsync(userNameOrEmail);
-        return user;
-    }
-
 }

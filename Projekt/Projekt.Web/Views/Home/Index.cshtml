@@ -1,8 +1,95 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Podgląd PDF";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="flex flex-col items-center justify-center min-h-[70vh] space-y-6 text-amber-900">
+  <div class="text-center space-y-2">
+    <p class="text-sm uppercase tracking-wide text-amber-800">Tome of Knowledge</p>
+    <h1 class="title-font text-3xl text-amber-900">Podgląd podręcznika</h1>
+    <p class="text-amber-800">Otwórz cały PDF lub wybrane strony.</p>
+  </div>
+
+  <div class="flex gap-3">
+    <button id="openPdfBtn" class="btn-primary px-6 py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+      Otwórz cały PDF
+    </button>
+
+    <button id="openPdfSectionBtn" class="px-6 py-3 rounded-xl text-sm font-semibold border border-amber-900/30 text-amber-900 bg-amber-100 hover:bg-amber-200">
+      Otwórz strony 19–30
+    </button>
+  </div>
+
+  <div id="pdfModal" class="fixed inset-0 bg-black/75 hidden z-50 flex items-center justify-center px-4">
+    <div class="parchment rounded-2xl w-full md:w-4/5 lg:w-3/4 xl:w-2/3 h-[85vh] flex flex-col relative">
+      <div class="flex justify-between items-center p-4 border-b border-amber-900/20">
+        <h2 id="pdfTitle" class="title-font text-lg text-amber-900">Podgląd dokumentu</h2>
+        <button id="closePdfBtn" class="text-amber-800 hover:text-red-700 text-3xl leading-none">&times;</button>
+      </div>
+      <div id="pdfContainer" class="flex-1 overflow-y-auto p-4 bg-white/70 space-y-8"></div>
+    </div>
+  </div>
 </div>
+
+@section Scripts {
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    const openAllBtn = document.getElementById('openPdfBtn');
+    const openSectionBtn = document.getElementById('openPdfSectionBtn');
+    const closeBtn = document.getElementById('closePdfBtn');
+    const modal = document.getElementById('pdfModal');
+    const container = document.getElementById('pdfContainer');
+    const title = document.getElementById('pdfTitle');
+    const url = "/Players_Handbook.pdf";
+    let currentRender = null;
+
+    async function renderPdf(startPage = 1, endPage = null) {
+      if (currentRender) currentRender.cancelled = true;
+      const renderSession = { cancelled: false };
+      currentRender = renderSession;
+      container.innerHTML = "";
+      const pdf = await pdfjsLib.getDocument(url).promise;
+      const totalPages = pdf.numPages;
+      if (!endPage || endPage > totalPages) endPage = totalPages;
+
+      for (let i = startPage; i <= endPage; i++) {
+        if (renderSession.cancelled) return;
+        const page = await pdf.getPage(i);
+        const scale = 1.1;
+        const viewport = page.getViewport({ scale });
+        const pageWrapper = document.createElement("div");
+        pageWrapper.classList.add("flex", "flex-col", "items-center");
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.classList.add("shadow", "rounded", "bg-white");
+        pageWrapper.appendChild(canvas);
+        const pageLabel = document.createElement("p");
+        pageLabel.textContent = `Strona ${i}`;
+        pageLabel.classList.add("text-sm", "text-gray-700", "mt-2");
+        pageWrapper.appendChild(pageLabel);
+        container.appendChild(pageWrapper);
+        await page.render({ canvasContext: context, viewport }).promise;
+        if (renderSession.cancelled) return;
+      }
+      currentRender = null;
+    }
+
+    openAllBtn.addEventListener('click', async () => {
+      title.textContent = "Podgląd całego dokumentu";
+      modal.classList.remove('hidden');
+      container.innerHTML = `<p class="text-amber-800 text-center mt-6">Ładowanie...</p>`;
+      await renderPdf(1);
+    });
+
+    openSectionBtn.addEventListener('click', async () => {
+      title.textContent = "Podgląd stron 19–30";
+      modal.classList.remove('hidden');
+      container.innerHTML = `<p class="text-amber-800 text-center mt-6">Ładowanie wybranych stron...</p>`;
+      await renderPdf(19, 30);
+    });
+
+    closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+  </script>
+}
