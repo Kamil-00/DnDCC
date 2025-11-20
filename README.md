@@ -48,7 +48,7 @@ Plik: `Projekt/Projekt.Web/appsettings.json`
 
 W produkcji zmienic żeby klucz JWT był poza repozytorium (Secret Manager/KeyVault/zmienne środowiskowe).
 
-## API (rejestracja, logowanie, autoryzacja, reset hasła)
+## API (rejestracja, logowanie, autoryzacja)
 
 1. Rejestracja użytkownika POST
    http://localhost:5000/api/auth/register
@@ -83,28 +83,6 @@ Jeśli 401, sprawdź czy nagłówek `Authorization: Bearer <token>` jest ustawio
 4. Wylogowanie i wyczyszczenie cookies GET
    http://localhost:5000/api/auth/logout
 
-5. Żądanie resetu hasła POST
-   http://localhost:5000/api/auth/forgot-password
-
-```powershell
-{
-    "email": "jan.ko@asd.com"
-}
-```
-
-Wysłanie tokenu na konsole, jeżeli email istnieje.
-
-6. Ustawienie nowego hasła POST
-   http://localhost:5000/api/auth/reset-password
-
-```powershell
-{
-    "userNameOrEmail": "jan.ko@asd.com",
-    "token": "tutaj-tokon-z-konsoli",
-    "newPassword": "NoweHaslo123"
-}
-```
-
 ## Uwierzytelnianie w MVC (HTML)
 
 - Akcje/kontrolery zabezpieczaj atrybutami:
@@ -113,4 +91,6 @@ Wysłanie tokenu na konsole, jeżeli email istnieje.
 [Authorize]
 public IActionResult OnlySignedIn() => View();
 
+[Authorize(Roles = "Admin")]
+public IActionResult AdminOnly() => View();
 ```

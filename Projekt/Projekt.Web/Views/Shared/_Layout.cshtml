@@ -1,49 +1,223 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pl">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Projekt.Web</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
+    <title>@ViewData["Title"] - DnDCC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Crimson+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <style>
+        :root {
+            --bg: linear-gradient(135deg, #0c0a0f 0%, #1c1726 45%, #2d1b1b 100%);
+            --panel: #f6f0e5;
+            --panel-border: #d7c9b8;
+            --accent: #c89b4f;
+            --accent-dark: #4e2f1f;
+        }
+        body {
+            font-family: 'Crimson Pro', serif;
+            background: center/cover no-repeat url('/images/tlo.jpg'), var(--bg);
+            color: #1f140d;
+        }
+        .title-font { font-family: 'Cinzel', serif; letter-spacing: 0.03em; }
+        .parchment {
+            background: var(--panel);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+            border: 1px solid var(--panel-border);
+        }
+        .nav-link { transition: color .2s ease, transform .2s ease; }
+        .nav-link:hover { color: var(--accent); transform: translateY(-1px); }
+        .btn-primary {
+            background: linear-gradient(135deg, #b68946, #d6b06b);
+            color: #2b1c10;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+        }
+        .btn-primary:hover { filter: brightness(1.05); }
+        .modal-backdrop { background: rgba(0,0,0,0.65); }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Projekt.Web</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+<body class="min-h-screen flex flex-col">
+    <header class="border-b border-amber-900/30 bg-black/40 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between text-amber-100">
+            <a href="@Url.Action("Index","Home")" class="title-font text-xl tracking-wide">DnDCC</a>
+            <nav class="grid grid-cols-4 gap-3 text-sm uppercase tracking-wide items-center">
+                <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Index","Character")">Moje postacie</a>
+                <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Add","Character")">Stwórz postać</a>
+                <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Index","Home")">Podręczniki</a>
+                <button id="openAuth" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] flex items-center justify-center gap-2">
+                    <img src="/images/konto.webp" alt="konto" class="w-4 h-4">
+                    <span>LOGOWANIE/REJESTRACJA</span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
+            </nav>
+        </div>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    <main class="flex-1 max-w-6xl mx-auto px-4 py-8">
+        <div class="parchment rounded-2xl p-6 md:p-8">
             @RenderBody()
-        </main>
+        </div>
+    </main>
+    <footer class="h-[30px] bg-black text-amber-100 flex items-center justify-center text-xs">
+        © 2025 All rights reserved by DnDCC. v 1.0
+    </footer>
+
+    <!-- Modal auth (login & register) -->
+    <div id="authModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center px-4">
+        <div class="parchment rounded-2xl w-full max-w-lg relative p-6">
+            <button id="closeAuth" class="absolute right-4 top-3 text-amber-800 hover:text-red-700 text-2xl leading-none">&times;</button>
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm uppercase tracking-wide text-amber-700">Gildia bohaterów</p>
+                    <h2 id="authTitle" class="title-font text-2xl text-amber-900">Zaloguj się</h2>
+                    <p id="authSubtitle" class="text-sm text-amber-800">Podaj login/email i hasło.</p>
+                </div>
+                <button id="toggleAuth" class="text-sm text-amber-900 underline">Przełącz na rejestrację</button>
+            </div>
+
+            <div class="space-y-3" id="authFields">
+                <div>
+                    <label class="text-sm text-amber-900">Login lub email</label>
+                    <input id="authUser" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div id="authEmailRow" class="hidden">
+                    <label class="text-sm text-amber-900">Email</label>
+                    <input id="authEmail" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div class="grid gap-3 md:grid-cols-2" id="authNameRow">
+                    <div>
+                        <label class="text-sm text-amber-900">Imię</label>
+                        <input id="authFirst" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                    </div>
+                    <div>
+                        <label class="text-sm text-amber-900">Nazwisko</label>
+                        <input id="authLast" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                    </div>
+                </div>
+                <div>
+                    <label class="text-sm text-amber-900">Hasło</label>
+                    <input id="authPass" type="password" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div id="authAlert" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm"></div>
+                <button id="authSubmit" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+                    Wyślij
+                </button>
+            </div>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2022 - Projekt.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
+    <script>
+        const openAuthBtn = document.getElementById('openAuth');
+        const authModal = document.getElementById('authModal');
+        const closeAuthBtn = document.getElementById('closeAuth');
+        const toggleAuthBtn = document.getElementById('toggleAuth');
+        const authTitle = document.getElementById('authTitle');
+        const authSubtitle = document.getElementById('authSubtitle');
+        const authEmailRow = document.getElementById('authEmailRow');
+        const authNameRow = document.getElementById('authNameRow');
+        const authSubmit = document.getElementById('authSubmit');
+        const authAlert = document.getElementById('authAlert');
+
+        let mode = 'login'; // login | register
+
+        const fields = {
+            user: document.getElementById('authUser'),
+            email: document.getElementById('authEmail'),
+            first: document.getElementById('authFirst'),
+            last: document.getElementById('authLast'),
+            pass: document.getElementById('authPass')
+        };
+
+        function setMode(newMode) {
+            mode = newMode;
+            if (mode === 'login') {
+                authTitle.textContent = 'Zaloguj się';
+                authSubtitle.textContent = 'Podaj login/email i hasło.';
+                authEmailRow.classList.add('hidden');
+                authNameRow.classList.add('hidden');
+                toggleAuthBtn.textContent = 'Przełącz na rejestrację';
+            } else {
+                authTitle.textContent = 'Załóż konto';
+                authSubtitle.textContent = 'Wypełnij dane nowego bohatera.';
+                authEmailRow.classList.remove('hidden');
+                authNameRow.classList.remove('hidden');
+                toggleAuthBtn.textContent = 'Przełącz na logowanie';
+            }
+            clearAuthError();
+        }
+
+        function showAuthError(msg) {
+            authAlert.textContent = msg;
+            authAlert.classList.remove('hidden');
+        }
+        function clearAuthError() {
+            authAlert.textContent = '';
+            authAlert.classList.add('hidden');
+        }
+
+        openAuthBtn?.addEventListener('click', () => {
+            setMode('login');
+            authModal.classList.remove('hidden');
+        });
+        closeAuthBtn?.addEventListener('click', () => authModal.classList.add('hidden'));
+        authModal?.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.add('hidden'); });
+        toggleAuthBtn?.addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
+
+        authSubmit?.addEventListener('click', async () => {
+            clearAuthError();
+            const user = fields.user?.value.trim();
+            const pass = fields.pass?.value;
+            if (!user || !pass) {
+                showAuthError('Podaj login/email i hasło.');
+                return;
+            }
+            if (mode === 'login') {
+                try {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userNameOrEmail: user, password: pass })
+                    });
+                    if (!res.ok) {
+                        showAuthError('Błędne dane logowania.');
+                        return;
+                    }
+                    location.reload();
+                } catch {
+                    showAuthError('Problem z połączeniem.');
+                }
+            } else {
+                const email = fields.email?.value.trim();
+                const first = fields.first?.value.trim();
+                const last = fields.last?.value.trim();
+                if (!email || !first || !last) {
+                    showAuthError('Uzupełnij wszystkie pola.');
+                    return;
+                }
+                try {
+                    const res = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userName: user,
+                            email: email,
+                            firstName: first,
+                            lastName: last,
+                            password: pass,
+                            isPremium: false
+                        })
+                    });
+                    if (!res.ok) {
+                        showAuthError('Nie udało się założyć konta.');
+                        return;
+                    }
+                    location.reload();
+                } catch {
+                    showAuthError('Problem z połączeniem.');
+                }
+            }
+        });
+    </script>
 </body>
 </html>

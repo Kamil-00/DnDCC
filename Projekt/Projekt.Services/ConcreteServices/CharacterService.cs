@@ -31,4 +31,12 @@ public class CharacterService : BaseService, ICharacterService
         }
         DbContext.SaveChanges();
     }
+
+    public void DeleteCharacter(int id)
+    {
+        var character = DbContext.Characters.FirstOrDefault(c => c.Id == id);
+        if (character == null) return;
+        DbContext.Characters.Remove(character);
+        DbContext.SaveChanges();
+    }
 }

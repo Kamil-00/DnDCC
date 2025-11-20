@@ -58,23 +58,4 @@ public class AuthController : ControllerBase
         Response.Cookies.Delete("access_token");
         return NoContent();
     }
-
-    [HttpPost("forgot-password")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordVm vm)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        await _auth.SendPasswordResetTokenAsync(vm);
-        return Ok(new { message = "If the email exists, reset token has been sent to console." });
-    }
-
-    [HttpPost("reset-password")]
-    [AllowAnonymous]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordVm vm)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        var (success, error) = await _auth.ResetPasswordAsync(vm);
-        if (!success) return BadRequest(new { error });
-        return NoContent();
-    }
 }

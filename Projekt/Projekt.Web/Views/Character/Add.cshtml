@@ -1,356 +1,231 @@
 @model Projekt.Model.DataModels.Character
-
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
-    ViewData["Title"] = "Add Character";
+    ViewData["Title"] = "Nowa postac";
+    var races = ViewData["Races"] as List<SelectListItem> ?? new();
+    var classes = ViewData["Classes"] as List<SelectListItem> ?? new();
+    var alignments = ViewData["Alignments"] as List<SelectListItem> ?? new();
 }
-
-<h2>Add New Character</h2>
-
-<form id="characterForm" asp-action="Add" method="post">
-    <div class="form-group">
-        <label asp-for="Name"></label>
-        <input id="name" asp-for="Name" class="form-control" value="Nazwa postaci"/>
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm uppercase tracking-wide text-amber-700">Stworz bohatera</p>
+            <h1 class="title-font text-3xl text-amber-900">Nowa postac</h1>
+        </div>
+        <div class="text-sm text-amber-800">
+            Wybierz rase, klase i statystyki, a my pobierzemy profki i ekwipunek startowy.
+        </div>
     </div>
 
-    <div class="form-group">
-        <label asp-for="Alignment"></label>
-        <select id="alignment" asp-for="Alignment" class="form-select" asp-items="@(ViewData["Alignments"] as IEnumerable<SelectListItem>)"></select>
-    </div>
+    <form id="characterForm" class="space-y-4">
+        <div>
+            <label class="text-sm text-amber-900">Imie</label>
+            <input name="Name" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg focus:ring focus:ring-amber-200 bg-white/90" />
+        </div>
+        <div class="grid gap-4 md:grid-cols-3">
+            <div>
+                <label class="text-sm text-amber-900">Rasa</label>
+                <select id="race" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90">
+                    @foreach (var r in races) { <option value="@r.Value">@r.Text</option> }
+                </select>
+            </div>
+            <div>
+                <label class="text-sm text-amber-900">Klasa</label>
+                <select id="class" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90">
+                    @foreach (var c in classes) { <option value="@c.Value">@c.Text</option> }
+                </select>
+            </div>
+            <div>
+                <label class="text-sm text-amber-900">Alignment</label>
+                <select id="alignment" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90">
+                    @foreach (var a in alignments) { <option value="@a.Value">@a.Text</option> }
+                </select>
+            </div>
+        </div>
 
-    <div class="form-group">
-        <label asp-for="Race"></label>
-        <select id="race" asp-for="Race" class="form-select" asp-items="@(ViewData["Races"] as IEnumerable<SelectListItem>)"></select>
-    </div>
+        <div class="grid gap-4 md:grid-cols-3">
+            <div><label class="text-sm text-amber-900">STR</label><input id="str" type="number" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" /></div>
+            <div><label class="text-sm text-amber-900">DEX</label><input id="dex" type="number" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" /></div>
+            <div><label class="text-sm text-amber-900">CON</label><input id="con" type="number" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" /></div>
+        </div>
+        <div class="grid gap-4 md:grid-cols-3">
+            <div><label class="text-sm text-amber-900">INT</label><input id="int" type="number" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" /></div>
+            <div><label class="text-sm text-amber-900">WIS</label><input id="wis" type="number" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" /></div>
+            <div><label class="text-sm text-amber-900">CHA</label><input id="cha" type="number" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" /></div>
+        </div>
 
-    <div class="form-group">
-        <label asp-for="Class"></label>
-        <select id="classSelect" asp-for="Class" class="form-select" asp-items="@(ViewData["Classes"] as IEnumerable<SelectListItem>)"></select>
-    </div>
+        <div class="grid gap-4 md:grid-cols-2">
+            <div>
+                <label class="text-sm text-amber-900">Proficiencje (z klasy)</label>
+                <div id="proficienciesList" class="mt-2 space-y-2 text-sm text-amber-900 bg-white/70 border border-amber-900/15 rounded-lg p-3"></div>
+            </div>
+            <div>
+                <label class="text-sm text-amber-900">Ekwipunek startowy</label>
+                <div id="itemsList" class="mt-2 space-y-2 text-sm text-amber-900 bg-white/70 border border-amber-900/15 rounded-lg p-3"></div>
+            </div>
+        </div>
 
-    <div class="form-row">
-        <div class="col"><label asp-for="Strength"></label><input id="str" asp-for="Strength" class="form-control" value="10" /></div>
-        <div class="col"><label asp-for="Dexterity"></label><input id="dex" asp-for="Dexterity" class="form-control" value="10" /></div>
-        <div class="col"><label asp-for="Constitution"></label><input id="con" asp-for="Constitution" class="form-control" value="10" /></div>
-        <div class="col"><label asp-for="Intelligence"></label><input id="int" asp-for="Intelligence" class="form-control" value="10" /></div>
-        <div class="col"><label asp-for="Wisdom"></label><input id="wis" asp-for="Wisdom" class="form-control" value="10" /></div>
-        <div class="col"><label asp-for="Charisma"></label><input id="cha" asp-for="Charisma" class="form-control" value="10" /></div>
-    </div>
+        <div id="formAlert" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm"></div>
 
-    <div id="proficiencyContainer"></div>
-    <div id="equipmentContainer"></div>
+        <button type="button" id="saveBtn" class="btn-primary px-5 py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+            Zapisz postac
+        </button>
+    </form>
+</div>
 
-    <button type="submit" class="btn btn-success mt-3">Create</button>
-    <a class="btn btn-secondary mt-3" href="@Url.Action("Index", "Character")">Cancel</a>
-</form>
 @section Scripts {
 <script>
-    function generateFieldsets(container, choice, index){
-        const fieldset = document.createElement('fieldset');
-        fieldset.classList.add('border', 'rounded', 'p-3', 'mb-3');
+const saveBtn = document.getElementById('saveBtn');
+const profList = document.getElementById('proficienciesList');
+const itemsList = document.getElementById('itemsList');
+const formAlert = document.getElementById('formAlert');
 
-        const legend = document.createElement('legend');
-        legend.textContent = choice.description;
-        fieldset.appendChild(legend);
-
-        const info = document.createElement('p');
-        info.textContent = `Choose ${choice.chooseCount}:`;
-        fieldset.appendChild(info);
-
-        choice.options.forEach((opt, i) => {
-            const div = document.createElement('div');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = `proficiency_${index}`;
-            checkbox.value = opt.value;
-            checkbox.id = `opt_${index}_${i}`;
-
-            const label = document.createElement('label');
-            label.setAttribute('for', `opt_${index}_${i}`);
-            label.textContent = opt.text;
-
-            div.appendChild(checkbox);
-            div.appendChild(label);
-            fieldset.appendChild(div);
-        });
-
-        fieldset.addEventListener('change', e => {
-            const checked = fieldset.querySelectorAll('input[type=checkbox]:checked').length;
-            if (checked > choice.chooseCount) {
-                e.target.checked = false;
-                alert(`You cannot choose more than ${choice.chooseCount} options.`);
-            }
-        });
-
-        container.appendChild(fieldset);
-    }
-
-    function renderEquipmentChoices(choices) {
-    equipmentContainer.innerHTML = '';
-
-    if (!choices.length) {
-        equipmentContainer.innerHTML = '<p>Brak danych wyposażenia.</p>';
-        return;
-    }
-
-    choices.forEach((choice, index) => {
-        const card = document.createElement('div');
-        card.className = 'card mb-3 shadow-sm p-3';
-
-        const title = document.createElement('h5');
-        title.textContent = choice.description;
-        card.appendChild(title);
-
-        const hint = document.createElement('p');
-        hint.className = 'text-muted';
-        hint.textContent = `Wybierz ${choice.chooseCount}`;
-        card.appendChild(hint);
-
-        const inputType = choice.chooseCount === 1 ? 'radio' : 'checkbox';
-
-        choice.itemSets.forEach((set, setIndex) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'form-check';
-
-            const input = document.createElement('input');
-            input.type = inputType;
-            input.name = `choice_${index}`;
-            input.id = `opt_${index}_${setIndex}`;
-            input.className = 'form-check-input me-2';
-
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.className = 'form-check-label';
-
-            // Jeśli zestaw ma listę przedmiotów (np. miecz i 20 strzał)
-            if ((set.categoryItems && set.categoryItems.length > 0) || (set.regularItems && set.regularItems.length > 0)) {
-                // Sprawdź, czy to "dowolna kategoria" (czyli z kontrolera: sets.Add(ItemSet z ChooseCount=0))
-                if (set.categoryCount > 0 && set.regularCount > 0) {
-                    const categorySelect = document.createElement('select');
-                    categorySelect.className = 'form-select d-inline-block ms-2';
-                    categorySelect.style.width = 'auto';
-                    if (set.categoryCount > 1) {
-                        categorySelect.multiple = true;
-                        categorySelect.size = set.categoryCount;
-                    }
-
-                    const loadingOption = document.createElement('option');
-                    loadingOption.textContent = 'Ładowanie...';
-                    categorySelect.appendChild(loadingOption);
-
-                    GetCategoryItems(set.categoryItems, categorySelect);
-                    categorySelect.selectedIndex = 0;
-                    input.value = categorySelect.options[0].value;
-                    
-                    /*input.addEventListener('change', () => {
-                        if (input.checked && !input.value) {
-                            input.value = categorySelect.options[categorySelect.selectedIndex]?.value || '';
-                        }
-                        console.log("Input: " + input.value);
-                    });*/
-                    input.addEventListener('change', () => {
-                        if (input.checked && !input.value) {
-                            input.value = categorySelect.options[categorySelect.selectedIndex]?.value || '';
-                        }
-                        //console.log("Changed!: ");
-                    });
-
-                    categorySelect.addEventListener('change', () => {
-                        input.checked = true;
-                        if (categorySelect.multiple) {
-                            const values = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
-                            input.value = values.join('; ');
-                        } else {
-                            input.value = categorySelect.value;
-                        }
-                    });
-
-                    // najpierw wypisz nazwę przedmiotów
-                    const itemNames = set.regularItems
-                        .map(it => `${it.name} ×${it.quantity}`)
-                        .join('; ');
-
-                    // zamiast textContent (które usuwa select), użyj append
-                    label.textContent = `${itemNames}: `;
-                    label.appendChild(categorySelect);
-                }
-                else if (set.categoryCount > 0) {
-                    //console.log("CategoryCount > 0 " + set.categoryCount);
-                    // wybór z kategorii
-                    const categorySelect = document.createElement('select');
-                    categorySelect.className = 'form-select d-inline-block ms-2';
-                    categorySelect.style.width = 'auto';
-                    if (set.categoryCount > 1) {
-                        categorySelect.multiple = true;
-                        categorySelect.size = set.categoryCount;
-                    }
-
-                    const loadingOption = document.createElement('option');
-                    loadingOption.textContent = 'Ładowanie...';
-                    categorySelect.appendChild(loadingOption);
-
-                    // Ustal nazwę kategorii z pierwszego elementu
-                    //const categoryName = set.items[0]?.name;
-                    GetCategoryItems(set.categoryItems, categorySelect);
-                    categorySelect.selectedIndex = 0;
-                    input.value = categorySelect.options[0].value;
-
-                    input.addEventListener('change', () => {
-                        if (input.checked && !input.value) {
-                            input.value = categorySelect.options[categorySelect.selectedIndex]?.value || '';
-                        }
-                        //console.log("Changed!: ");
-                    });
-                    
-                    categorySelect.addEventListener('change', () => {
-                        input.checked = true;
-                        if (categorySelect.multiple) {
-                            //input.value = categorySelect.value;
-                            const values = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
-                            console.log(values);
-                            console.log(values.join(' ×1; ') + " ×1");
-                            input.value = values.join(' ×1; ') + " ×1";
-                        } else {
-                            input.value = categorySelect.value;
-                        }
-                    });
-
-                    //label.textContent = `${categoryName}: `;
-                    label.appendChild(categorySelect);
-                }
-                else if (set.regularCount > 0){
-                    //console.log("RegularCount > 0 " + set.regularCount);
-                    // zwykły zestaw — np. "rapier" albo "shortbow ×1, arrows ×20"
-                    const itemNames = set.regularItems
-                        .map(it => `${it.name} ×${it.quantity}`)
-                        .join('; ');
-                    //console.log(set.regularItems);
-                    label.textContent = itemNames;
-                    input.value = itemNames;
-                }
-            }
-
-            wrapper.appendChild(input);
-            wrapper.appendChild(label);
-            card.appendChild(wrapper);
-        });
-
-        equipmentContainer.appendChild(card);
-    });
+function showError(msg) {
+  formAlert.textContent = msg;
+  formAlert.classList.remove('hidden');
 }
 
-
-async function GetCategoryItems(categoryItems, selectEl) {
-    try {
-        selectEl.innerHTML = '';
-        categoryItems.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.name;
-            opt.textContent = item.name;
-            selectEl.appendChild(opt);
-        });
-    } catch (err) {
-        selectEl.innerHTML = '';
-        const opt = document.createElement('option');
-        opt.textContent = 'Nie udało się pobrać opcji';
-        selectEl.appendChild(opt);
-        //console.log("ERROR = " + err);
-    }
+function clearError() {
+  formAlert.textContent = '';
+  formAlert.classList.add('hidden');
 }
 
+async function loadProficiencies(className) {
+  profList.innerHTML = '<p class="text-amber-700">Ladowanie...</p>';
+  try {
+    const res = await fetch(`@Url.Action("GetProficiencies","Character")?className=${encodeURIComponent(className)}`);
+    if (!res.ok) throw new Error('Blad pobierania proficiencies');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      profList.innerHTML = '<p class="text-amber-700">Brak do wyboru</p>';
+      return;
+    }
+    profList.innerHTML = data.map(p => `
+      <label class="flex items-center gap-2">
+        <input type="checkbox" value="${p.value}" class="proficiency-check accent-amber-700">
+        <span>${p.text}</span>
+      </label>
+    `).join('');
+  } catch (e) {
+    profList.innerHTML = '<p class="text-red-700 text-sm">Nie udalo sie pobrac proficiencies.</p>';
+  }
+}
 
-    const classSelect = document.getElementById('classSelect');
-    const proficiencyContainer = document.getElementById('proficiencyContainer');
-    const equipmentContainer = document.getElementById('equipmentContainer');
-    
-    classSelect.addEventListener('change', async () => {
-        const className = classSelect.value;
-        proficiencyContainer.innerHTML = '';
-        equipmentContainer.innerHTML = '';
+async function loadItems(className) {
+  itemsList.innerHTML = '<p class="text-amber-700">Ladowanie...</p>';
+  try {
+    const res = await fetch(`@Url.Action("GetItems","Character")?className=${encodeURIComponent(className)}`);
+    if (!res.ok) throw new Error('Blad pobierania ekwipunku');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      itemsList.innerHTML = '<p class="text-amber-700">Brak opcji</p>';
+      return;
+    }
+    itemsList.innerHTML = data.map((choice, idx) => {
+      const sets = (choice.ItemSets || choice.itemSets || []);
+      const options = sets.map((set) => {
+        const regularItems = set.RegularItems || set.regularItems || [];
+        const categoryItems = set.CategoryItems || set.categoryItems || [];
+        const regular = regularItems.map(item => `<div class="text-sm text-amber-900">• ${item.Name ?? item.name} x ${item.Quantity ?? item.quantity}</div>`).join('');
+        const category = categoryItems.map(item => `<option value="${item.Name ?? item.name}">${item.Name ?? item.name}</option>`).join('');
+        const categorySelect = categoryItems.length
+          ? `<select class="mt-1 px-2 py-1 border border-amber-900/20 rounded item-select bg-white/90" data-choice="${idx}">
+                <option value="">Wybierz (${set.CategoryCount ?? set.categoryCount ?? 1})</option>
+                ${category}
+             </select>`
+          : '';
+        return `
+          <div class="border border-amber-900/15 rounded-lg p-2 bg-amber-50">
+            ${regular || '<div class="text-sm text-amber-700">Brak stalowych pozycji</div>'}
+            ${categorySelect}
+          </div>`;
+      }).join('');
+      return `
+        <div class="border border-amber-900/20 rounded-lg p-3 bg-white/80">
+          <div class="title-font text-amber-900 text-sm mb-2">${choice.Description ?? choice.description ?? 'Wybierz ekwipunek'}</div>
+          <div class="space-y-2">${options}</div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    itemsList.innerHTML = '<p class="text-red-700 text-sm">Nie udalo sie pobrac ekwipunku.</p>';
+  }
+}
 
-        if (!className) return;
+document.getElementById('class').addEventListener('change', (e) => {
+  const cls = e.target.value;
+  loadProficiencies(cls);
+  loadItems(cls);
+});
 
-        const prof_response = await fetch(`/Character/GetProficiencies2?className=${className}`);
-        if (!prof_response.ok) {
-            proficiencyContainer.innerHTML = `<p class="text-danger">Nie udało się pobrać danych.</p>`;
-            return;
-        }
-        const prof_choices = await prof_response.json();
-        prof_choices.forEach((choice, index) => {
-            generateFieldsets(proficiencyContainer, choice, index);
-        });
+saveBtn.addEventListener('click', async () => {
+  clearError();
+  const name = document.querySelector('input[name="Name"]').value.trim();
+  const race = document.getElementById('race').value;
+  const cls = document.getElementById('class').value;
+  const alignment = document.getElementById('alignment').value;
+  const strength = +document.getElementById('str').value;
+  const dexterity = +document.getElementById('dex').value;
+  const constitution = +document.getElementById('con').value;
+  const intelligence = +document.getElementById('int').value;
+  const wisdom = +document.getElementById('wis').value;
+  const charisma = +document.getElementById('cha').value;
 
-        const equip_reponse = await fetch(`/Character/GetItems?className=${className}`);
+  if (!name || !race || !cls || !alignment) {
+    showError('Uzupelnij imie, rase, klase i alignment.');
+    return;
+  }
 
-        if (!equip_reponse.ok) {
-            equipmentContainer.innerHTML = `<p class="text-danger">Nie udało się pobrać danych.</p>`;
-            return;
-        }
-        const equip_choices = await equip_reponse.json();
-        renderEquipmentChoices(equip_choices);
+  const proficiencies = Array.from(document.querySelectorAll('.proficiency-check:checked')).map(i => i.value);
+  const items = Array.from(document.querySelectorAll('.item-select'))
+    .map(sel => sel.value)
+    .filter(Boolean)
+    .map(val => ({ name: val, quantity: 1 }));
+
+  const payload = {
+    character: {
+      name,
+      race,
+      @Html.Raw("class"): cls,
+      alignment,
+      strength,
+      dexterity,
+      constitution,
+      intelligence,
+      wisdom,
+      charisma,
+      subClass: "",
+      spells: "",
+      proficiencies: [],
+      traits: [],
+      items: []
+    },
+    proficiencies,
+    items
+  };
+
+  try {
+    const res = await fetch('@Url.Action("Add","Character")', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+    if (!res.ok) {
+      showError('Blad zapisu postaci.');
+      return;
+    }
+    const data = await res.json();
+    window.location = data.redirectUrl;
+  } catch (e) {
+    showError('Blad polaczenia podczas zapisu.');
+  }
+});
 
-    const form = document.getElementById('characterForm');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const fieldsets = document.querySelectorAll('#proficiencyContainer fieldset');
-        const proficiencies = [];
-
-        var character = {
-            name: document.getElementById('name').value,
-            class: document.getElementById('classSelect').value,
-            race: document.getElementById('race').value,
-            alignment: document.getElementById('alignment').value,
-            strength: parseInt(document.getElementById('str').value),
-            dexterity: parseInt(document.getElementById('dex').value),
-            constitution: parseInt(document.getElementById('con').value),
-            wisdom: parseInt(document.getElementById('wis').value),
-            intelligence: parseInt(document.getElementById('int').value),
-            charisma: parseInt(document.getElementById('cha').value)
-        };
-
-        fieldsets.forEach(fs => {
-            const selected = Array.from(fs.querySelectorAll('input[type=checkbox]:checked')).map(c => c.value);
-
-            selected.forEach(choice => {
-                proficiencies.push(choice);
-            });
-        });
-
-        const equipmentChoices = [];
-        document.querySelectorAll('#equipmentContainer .card').forEach((card, index) => {
-            const selectedInputs = card.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked');
-            selectedInputs.forEach(input => {
-                equipmentChoices.push({
-                    name: input.value, // nazwa przedmiotu
-                    quantity: 1        // możesz później rozszerzyć o wybór ilości
-                });
-            });
-        });
-
-        const payload = {
-            character,
-            proficiencies,
-            items: equipmentChoices
-        };
-
-        await fetch('/Character/Add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-            window.location.href = data.redirectUrl;
-            } else {
-            alert("Server internal error 500");
-            }
-        })
-        .catch(err => console.error("Server error:", err));;
-            });
+document.addEventListener('DOMContentLoaded', () => {
+  const cls = document.getElementById('class').value;
+  if (cls) {
+    loadProficiencies(cls);
+    loadItems(cls);
+  }
+});
 </script>
 }

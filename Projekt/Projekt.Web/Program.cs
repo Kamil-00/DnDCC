@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.FileProviders;
 using System.Security.Claims;
 using System.Text;
 
@@ -113,6 +114,12 @@ else
 }
 
 app.UseStaticFiles();
+// Allow serving files from content root (e.g. Players_Handbook.pdf)
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(builder.Environment.ContentRootPath),
+    RequestPath = ""
+});
 
 var supportedCultures = new[] { "", "" };
             var localizationOptions = new RequestLocalizationOptions()

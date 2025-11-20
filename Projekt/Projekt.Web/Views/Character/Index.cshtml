@@ -1,39 +1,42 @@
 @model IEnumerable<Projekt.Model.DataModels.Character>
-
 @{
-    ViewData["Title"] = "Characters";
+    ViewData["Title"] = "Twoje postacie";
 }
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <p class="text-sm uppercase tracking-wide text-amber-700">Kronika bohaterów</p>
+        <h1 class="title-font text-3xl text-amber-900">Twoje postacie</h1>
+    </div>
+    <a href="@Url.Action("Add","Character")" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold border border-amber-900/30">
+        + Nowa postać
+    </a>
+</div>
 
-<h2>Characters</h2>
-
-<p>
-    <a class="btn btn-primary" href="@Url.Action("Add", "Character")">Add New Character</a>
-</p>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Class</th>
-            <th>Race</th>
-            <th>HP</th>
-            <th>Speed</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var c in Model)
-    {
-        <tr>
-            <td>@c.Name</td>
-            <td>@c.Class</td>
-            <td>@c.Race</td>
-            <td>@c.CurrentHP / @c.MaxHP</td>
-            <td>@c.Speed</td>
-            <td>
-                <a class="btn btn-info btn-sm" href="@Url.Action("Details", "Character", new { id = c.Id })">Details</a>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
+<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+@foreach (var c in Model) {
+    <div class="border border-amber-900/20 rounded-xl p-4 bg-white/80 shadow-md">
+        <div class="flex justify-center mb-3">
+            <img src="/images/avatars/avatar_@(c.Id).png"
+                 class="w-20 h-20 object-cover rounded-full border border-amber-900/30"
+                 alt="Awatar"
+                 onerror="this.classList.add('hidden'); this.nextElementSibling?.classList.remove('hidden');" />
+            <a href="@Url.Action("Details","Character", new { id = c.Id })" class="hidden text-sm text-amber-700 underline">
+                Generuj awatar
+            </a>
+        </div>
+        <div class="flex items-center justify-between">
+            <h2 class="title-font text-lg text-amber-900">@c.Name</h2>
+            <span class="text-xs px-2 py-1 rounded bg-amber-100 text-amber-800 border border-amber-900/20">@c.Class</span>
+        </div>
+        <p class="text-sm text-amber-800 mt-1">@c.Race • @c.Alignment</p>
+        <div class="mt-3 text-sm text-amber-900 space-y-1">
+            <div>HP: @c.CurrentHP / @c.MaxHP</div>
+            <div>AC: @c.ArmorClass • Speed: @c.Speed</div>
+        </div>
+        <div class="mt-4 flex gap-2">
+            <a class="btn-primary px-3 py-2 rounded-lg text-sm border border-amber-900/30"
+               href="@Url.Action("Details","Character", new { id = c.Id })">Szczegóły</a>
+        </div>
+    </div>
+}
+</div>
