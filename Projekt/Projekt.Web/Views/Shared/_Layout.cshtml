@@ -42,13 +42,14 @@
     <header class="border-b border-amber-900/30 bg-black/40 backdrop-blur sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between text-amber-100">
             <a href="@Url.Action("Index","Home")" class="title-font text-xl tracking-wide">DnDCC</a>
-            <nav class="grid grid-cols-4 gap-3 text-sm uppercase tracking-wide items-center">
-                <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Index","Character")">Moje postacie</a>
-                <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Add","Character")">Stwórz postać</a>
+            <nav id="mainNav" class="grid gap-3 text-sm uppercase tracking-wide items-center">
+                <!-- Links będą dynamicznie dodawane przez JavaScript -->
                 <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Index","Home")">Podręczniki</a>
-                <button id="openAuth" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] flex items-center justify-center gap-2">
+                <a id="navMyCharacters" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] hidden" href="@Url.Action("Index","Character")">Moje postacie</a>
+                <a id="navCreateCharacter" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] hidden" href="@Url.Action("Add","Character")">Stwórz postać</a>
+                <button id="authButton" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] flex items-center justify-center gap-2">
                     <img src="/images/konto.webp" alt="konto" class="w-4 h-4">
-                    <span>LOGOWANIE/REJESTRACJA</span>
+                    <span id="authButtonText">LOGOWANIE/REJESTRACJA</span>
                 </button>
             </nav>
         </div>
@@ -84,7 +85,7 @@
                     <label class="text-sm text-amber-900">Email</label>
                     <input id="authEmail" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
                 </div>
-                <div class="grid gap-3 md:grid-cols-2" id="authNameRow">
+                <div class="grid gap-3 md:grid-cols-2 hidden" id="authNameRow">
                     <div>
                         <label class="text-sm text-amber-900">Imię</label>
                         <input id="authFirst" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
@@ -106,11 +107,31 @@
         </div>
     </div>
 
+    <!-- Modal user menu -->
+    <div id="userModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center px-4">
+        <div class="parchment rounded-2xl w-full max-w-md relative p-6">
+            <button id="closeUser" class="absolute right-4 top-3 text-amber-800 hover:text-red-700 text-2xl leading-none">&times;</button>
+            <div class="mb-4">
+                <p class="text-sm uppercase tracking-wide text-amber-700">Profil</p>
+                <h2 class="title-font text-2xl text-amber-900" id="userFullName">Użytkownik</h2>
+                <p class="text-sm text-amber-800" id="userNameDisplay"></p>
+            </div>
+            <div class="space-y-3">
+                <button id="logoutBtn" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+                    Wyloguj się
+                </button>
+            </div>
+        </div>
+    </div>
+
     @RenderSection("Scripts", required: false)
     <script>
-        const openAuthBtn = document.getElementById('openAuth');
+        const authButton = document.getElementById('authButton');
+        const authButtonText = document.getElementById('authButtonText');
         const authModal = document.getElementById('authModal');
+        const userModal = document.getElementById('userModal');
         const closeAuthBtn = document.getElementById('closeAuth');
+        const closeUserBtn = document.getElementById('closeUser');
         const toggleAuthBtn = document.getElementById('toggleAuth');
         const authTitle = document.getElementById('authTitle');
         const authSubtitle = document.getElementById('authSubtitle');
@@ -118,8 +139,15 @@
         const authNameRow = document.getElementById('authNameRow');
         const authSubmit = document.getElementById('authSubmit');
         const authAlert = document.getElementById('authAlert');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userFullName = document.getElementById('userFullName');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const mainNav = document.getElementById('mainNav');
+        const navMyCharacters = document.getElementById('navMyCharacters');
+        const navCreateCharacter = document.getElementById('navCreateCharacter');
 
-        let mode = 'login'; // login | register
+        let mode = 'login';
+        let currentUser = null;
 
         const fields = {
             user: document.getElementById('authUser'),
@@ -128,6 +156,37 @@
             last: document.getElementById('authLast'),
             pass: document.getElementById('authPass')
         };
+
+        function updateNavigation() {
+            if (currentUser) {
+                mainNav.classList.remove('grid-cols-2');
+                mainNav.classList.add('grid-cols-4');
+                navMyCharacters.classList.remove('hidden');
+                navCreateCharacter.classList.remove('hidden');
+            } else {
+                mainNav.classList.remove('grid-cols-4');
+                mainNav.classList.add('grid-cols-2');
+                navMyCharacters.classList.add('hidden');
+                navCreateCharacter.classList.add('hidden');
+            }
+        }
+
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                currentUser = JSON.parse(userData);
+                updateUIForLoggedIn();
+            }
+            updateNavigation();
+        }
+
+        function updateUIForLoggedIn() {
+            if (currentUser) {
+                authButtonText.textContent = currentUser.userName.toUpperCase();
+                userFullName.textContent = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.userName;
+                userNameDisplay.textContent = currentUser.userName;
+            }
+        }
 
         function setMode(newMode) {
             mode = newMode;
@@ -145,33 +204,69 @@
                 toggleAuthBtn.textContent = 'Przełącz na logowanie';
             }
             clearAuthError();
+            clearFields();
+        }
+
+        function clearFields() {
+            fields.user.value = '';
+            fields.email.value = '';
+            fields.first.value = '';
+            fields.last.value = '';
+            fields.pass.value = '';
         }
 
         function showAuthError(msg) {
             authAlert.textContent = msg;
             authAlert.classList.remove('hidden');
         }
+
         function clearAuthError() {
             authAlert.textContent = '';
             authAlert.classList.add('hidden');
         }
 
-        openAuthBtn?.addEventListener('click', () => {
-            setMode('login');
-            authModal.classList.remove('hidden');
+        authButton?.addEventListener('click', () => {
+            if (currentUser) {
+                userModal.classList.remove('hidden');
+            } else {
+                setMode('login');
+                authModal.classList.remove('hidden');
+            }
         });
+
         closeAuthBtn?.addEventListener('click', () => authModal.classList.add('hidden'));
+        closeUserBtn?.addEventListener('click', () => userModal.classList.add('hidden'));
         authModal?.addEventListener('click', (e) => { if (e.target === authModal) authModal.classList.add('hidden'); });
+        userModal?.addEventListener('click', (e) => { if (e.target === userModal) userModal.classList.add('hidden'); });
         toggleAuthBtn?.addEventListener('click', () => setMode(mode === 'login' ? 'register' : 'login'));
+
+        logoutBtn?.addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (e) {
+                console.error('Logout error:', e);
+            }
+            localStorage.removeItem('user');
+            currentUser = null;
+            authButtonText.textContent = 'LOGOWANIE/REJESTRACJA';
+            userModal.classList.add('hidden');
+            updateNavigation();
+            location.href = '@Url.Action("Index","Home")';
+        });
 
         authSubmit?.addEventListener('click', async () => {
             clearAuthError();
             const user = fields.user?.value.trim();
             const pass = fields.pass?.value;
+
             if (!user || !pass) {
                 showAuthError('Podaj login/email i hasło.');
                 return;
             }
+
+            authSubmit.disabled = true;
+            authSubmit.textContent = 'Przetwarzanie...';
+
             if (mode === 'login') {
                 try {
                     const res = await fetch('/api/auth/login', {
@@ -179,22 +274,39 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userNameOrEmail: user, password: pass })
                     });
+
                     if (!res.ok) {
-                        showAuthError('Błędne dane logowania.');
+                        const data = await res.json().catch(() => ({}));
+                        showAuthError(data.error || 'Błędne dane logowania.');
                         return;
                     }
-                    location.reload();
-                } catch {
+
+                    const result = await res.json();
+                    localStorage.setItem('user', JSON.stringify(result));
+                    currentUser = result;
+                    updateUIForLoggedIn();
+                    updateNavigation();
+                    authModal.classList.add('hidden');
+                    clearFields();
+                } catch (err) {
+                    console.error('Login error:', err);
                     showAuthError('Problem z połączeniem.');
+                } finally {
+                    authSubmit.disabled = false;
+                    authSubmit.textContent = 'Wyślij';
                 }
             } else {
                 const email = fields.email?.value.trim();
                 const first = fields.first?.value.trim();
                 const last = fields.last?.value.trim();
+
                 if (!email || !first || !last) {
                     showAuthError('Uzupełnij wszystkie pola.');
+                    authSubmit.disabled = false;
+                    authSubmit.textContent = 'Wyślij';
                     return;
                 }
+
                 try {
                     const res = await fetch('/api/auth/register', {
                         method: 'POST',
@@ -208,16 +320,31 @@
                             isPremium: false
                         })
                     });
+
                     if (!res.ok) {
-                        showAuthError('Nie udało się założyć konta.');
+                        const data = await res.json().catch(() => ({}));
+                        showAuthError(data.error || 'Nie udało się założyć konta.');
                         return;
                     }
-                    location.reload();
-                } catch {
+
+                    const result = await res.json();
+                    localStorage.setItem('user', JSON.stringify(result));
+                    currentUser = result;
+                    updateUIForLoggedIn();
+                    updateNavigation();
+                    authModal.classList.add('hidden');
+                    clearFields();
+                } catch (err) {
+                    console.error('Register error:', err);
                     showAuthError('Problem z połączeniem.');
+                } finally {
+                    authSubmit.disabled = false;
+                    authSubmit.textContent = 'Wyślij';
                 }
             }
         });
+
+        checkAuth();
     </script>
 </body>
 </html>

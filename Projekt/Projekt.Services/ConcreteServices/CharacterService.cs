@@ -19,8 +19,8 @@ public class CharacterService : BaseService, ICharacterService
     public IEnumerable<Character> GetCharacters(int? userId = null)
     {
         return userId == null
-            ? DbContext.Characters.AsQueryable().ToList()
-            : DbContext.Characters.AsQueryable().Where(c => c.UserId == userId);
+            ? Enumerable.Empty<Character>()
+            : DbContext.Characters.AsQueryable().Where(c => c.UserId == userId.Value).ToList();
     }
 
     public void SaveCharacter(Character character) {

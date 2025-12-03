@@ -1,137 +1,116 @@
-using Projekt.DAL;
-using Projekt.Model.DataModels;
-using Projekt.Services.Configuration.AutoMapperProfiles;
-using Projekt.Web.Controllers;
-using Projekt.Services.ConcreteServices;
-using Projekt.Services.Interfaces;
+# DnDCC
 
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
+ASP.NET Core MVC + Web API z EF Core
 
-var builder = WebApplication.CreateBuilder(args);
+## Wymagania
 
-builder.Services.AddHttpClient();
-// Add services to the container.
-builder.Services.AddAutoMapper(typeof(MainProfile));
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")) //here you can define a database type.
-);
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+- .NET SDK 8.0+
+- SQL Server Express LocalDB (Windows)
 
-// Identity (User<int>/Role<int>)
-builder.Services
-.AddIdentityCore<User>(options =>
+## Szybki start
+
+1. Przywrócenie i kompilacja
+
+```powershell
+dotnet restore
+dotnet build .\Projekt.sln
+```
+
+2. Migracje bazy danych
+
+```powershell
+dotnet ef database update --project .\Projekt.DAL\Projekt.DAL.csproj --startup-project .\Projekt.Web\Projekt.csproj
+```
+
+3. Uruchom aplikację
+
+```powershell
+dotnet run --project .\Projekt.Web\Projekt.csproj
+```
+
+## Konfiguracja
+
+Plik: `Projekt/Projekt.Web/appsettings.json`
+
+```json
 {
-options.Password.RequiredLength = 6;
-options.Password.RequireDigit = false;
-options.Password.RequireUppercase = false;
-options.Password.RequireLowercase = false;
-options.Password.RequireNonAlphanumeric = false;
-})
-.AddRoles<Role>()
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddSignInManager()
-.AddDefaultTokenProviders();
-builder.Services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(2));
-// token lifespan for password reset
-
-// JWT Authentication
-
-var jwt = builder.Configuration.GetSection("Jwt");
-builder.Services.AddAuthentication(options =>
-{
-options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-options.RequireHttpsMetadata = false;
-options.SaveToken = true;
-options.TokenValidationParameters = new TokenValidationParameters
-{
-ValidateIssuer = true,
-ValidateAudience = true,
-ValidateIssuerSigningKey = true,
-ValidIssuer = jwt["Issuer"],
-ValidAudience = jwt["Audience"],
-IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!)),
-RoleClaimType = ClaimTypes.Role,
-NameClaimType = ClaimTypes.NameIdentifier
-};
-
-    // Allow JWTs to be passed in cookies
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = ctx =>
-        {
-            if (string.IsNullOrEmpty(ctx.Token) &&
-                ctx.Request.Cookies.TryGetValue("access_token", out var cookieToken))
-            {
-                ctx.Token = cookieToken;
-            }
-            return Task.CompletedTask;
-        }
-    };
-
-});
-
-builder.Services.AddTransient(typeof(ILogger), typeof(Logger<Program>)); //
-builder.Services.AddTransient<IStringLocalizer, StringLocalizer<BaseController>>(); //
-
-// DI Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-builder.Services.AddTransient<ICharacterService, CharacterService>();
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-var supportedCultures = new[] { "", "" };
-options.SetDefaultCulture(supportedCultures[0])
-.AddSupportedCultures(supportedCultures)
-.AddSupportedUICultures(supportedCultures);
-});
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-builder.Services.AddControllersWithViews()
-.AddViewLocalization()
-.AddDataAnnotationsLocalization();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-app.UseDeveloperExceptionPage();
-app.UseMigrationsEndPoint();
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=DnDCCAppDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+  },
+  "Jwt": {
+    "Issuer": "DnDCC",
+    "Audience": "DnDCC",
+    "Key": "super_secret_key_change_me_please_very_long",
+    "ExpiryMinutes": "120"
+  }
 }
-else
+```
+
+W produkcji zmienic żeby klucz JWT był poza repozytorium (Secret Manager/KeyVault/zmienne środowiskowe).
+
+## API (rejestracja, logowanie, autoryzacja, reset hasła)
+
+1. Rejestracja użytkownika POST
+   http://localhost:5000/api/auth/register
+
+```powershell
 {
-app.UseExceptionHandler("/Error");
+    "userName": "Jan123",
+    "email": "jan.ko@asd.com",
+    "firstName": "Jan",
+    "lastName": "Kowalski",
+    "password": "asdasd12"
 }
+```
 
-app.UseStaticFiles();
+2. Logowanie i generowanie tokenu POST
+   http://localhost:5000/api/auth/login
 
-var supportedCultures = new[] { "", "" };
-var localizationOptions = new RequestLocalizationOptions()
-.SetDefaultCulture(supportedCultures[0])
-.AddSupportedCultures(supportedCultures)
-.AddSupportedUICultures(supportedCultures);
-app.UseRequestLocalization(localizationOptions);
+```powershell
+{
+    "userNameOrEmail": "Jan123",
+    "password": "asdasd12"
+}
+```
 
-app.UseRouting();
+Po logowaniu token zapisuje sie do cookies
 
-app.UseAuthentication();
+3. Wywołanie chronionego endpointu GET
+   http://localhost:5000/api/ping
 
-app.UseAuthorization();
+Jeśli 401, sprawdź czy nagłówek `Authorization: Bearer <token>` jest ustawiony i czy token nie wygasł.
 
-app.MapControllerRoute(
-name: "default",
-pattern: "{controller=Home}/{action=Index}/{id?}");
+4. Wylogowanie i wyczyszczenie cookies GET
+   http://localhost:5000/api/auth/logout
 
-// Simple endpoint to test authentication
-app.MapGet("/api/ping", () => "dzięki działa").RequireAuthorization();
+5. Żądanie resetu hasła POST
+   http://localhost:5000/api/auth/forgot-password
 
-app.Run();
+```powershell
+{
+    "email": "jan.ko@asd.com"
+}
+```
+
+Wysłanie tokenu na konsole, jeżeli email istnieje.
+
+6. Ustawienie nowego hasła POST
+   http://localhost:5000/api/auth/reset-password
+
+```powershell
+{
+    "userNameOrEmail": "jan.ko@asd.com",
+    "token": "tutaj-tokon-z-konsoli",
+    "newPassword": "NoweHaslo123"
+}
+```
+
+## Uwierzytelnianie w MVC (HTML)
+
+- Akcje/kontrolery zabezpieczaj atrybutami:
+
+```csharp
+[Authorize]
+public IActionResult OnlySignedIn() => View();
+
+```

@@ -15,9 +15,11 @@ using Projekt.Model.DataModels;
 using Projekt.Services.ConcreteServices;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Projekt.Web.Controllers
 {
+    [Authorize]
     public class CharacterController : BaseController
     {
         private readonly HttpClient _httpClient;
@@ -41,8 +43,13 @@ namespace Projekt.Web.Controllers
 
         public IActionResult Index()
         {
-            // UWAGA. Jak będzie dodane logowanie, tutaj wrzucić userId
-            var characters = characterService.GetCharacters(null);
+            var userIdClaim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            var characters = characterService.GetCharacters(currentUserId).ToList();
             return View(characters);
         }
 
@@ -234,6 +241,16 @@ namespace Projekt.Web.Controllers
                         Console.WriteLine("item: " + item.Name + " Quantity: " + item.Quantity);
                     }
                 }
+            }
+
+            var userIdClaim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var currentUserId))
+            {
+                request.Character.UserId = currentUserId;
+            }
+            else
+            {
+                return Unauthorized(new { error = "Brak identyfikatora użytkownika." });
             }
 
             characterService.SaveCharacter(request.Character);
