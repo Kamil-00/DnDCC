@@ -77,6 +77,7 @@
             </div>
 
             <div class="space-y-3" id="authFields">
+                <!-- LOGIN/REGISTER FIELDS -->
                 <div>
                     <label class="text-sm text-amber-900">Login lub email</label>
                     <input id="authUser" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
@@ -99,6 +100,11 @@
                     <label class="text-sm text-amber-900">Hasło</label>
                     <input id="authPass" type="password" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
                 </div>
+                <!-- Forgot password link -->
+                <div class="text-right">
+                    <button id="forgotPassLink" class="text-xs text-amber-800 underline">Zapomniałeś hasła?</button>
+                </div>
+
                 <div id="authAlert" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm"></div>
                 <button id="authSubmit" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
                     Wyślij
@@ -107,19 +113,50 @@
         </div>
     </div>
 
-    <!-- Modal user menu -->
-    <div id="userModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center px-4">
-        <div class="parchment rounded-2xl w-full max-w-md relative p-6">
-            <button id="closeUser" class="absolute right-4 top-3 text-amber-800 hover:text-red-700 text-2xl leading-none">&times;</button>
+    <!-- Modal: forgot/reset password -->
+    <div id="passwordModal" class="hidden fixed inset-0 modal-backdrop z-50 flex items-center justify-center px-4">
+        <div class="parchment rounded-2xl w-full max-w-lg relative p-6">
+            <button id="closePasswordModal" class="absolute right-4 top-3 text-amber-800 hover:text-red-700 text-2xl leading-none">&times;</button>
             <div class="mb-4">
-                <p class="text-sm uppercase tracking-wide text-amber-700">Profil</p>
-                <h2 class="title-font text-2xl text-amber-900" id="userFullName">Użytkownik</h2>
-                <p class="text-sm text-amber-800" id="userNameDisplay"></p>
+                <p class="text-sm uppercase tracking-wide text-amber-700">Reset hasła</p>
+                <h2 id="passwordModalTitle" class="title-font text-2xl text-amber-900">Wyślij link resetujący</h2>
+                <p id="passwordModalSubtitle" class="text-sm text-amber-800">Podaj email konta, a wyślemy token resetu (w wersji dev wypisany jest na konsoli).'</p>
             </div>
-            <div class="space-y-3">
-                <button id="logoutBtn" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
-                    Wyloguj się
-                </button>
+
+            <!-- Step 1: request token -->
+            <div id="forgotStep" class="space-y-3">
+                <div>
+                    <label class="text-sm text-amber-900">Email</label>
+                    <input id="forgotEmail" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div id="forgotAlert" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm"></div>
+                <button id="sendResetTokenBtn" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold border border-amber-900/30">Wyślij token</button>
+
+                <div class="text-sm text-amber-800">
+                    Masz już token? <button id="goToResetStep" class="underline">Przejdź do zmiany hasła</button>
+                </div>
+            </div>
+
+            <!-- Step 2: reset password with token -->
+            <div id="resetStep" class="space-y-3 hidden">
+                <div>
+                    <label class="text-sm text-amber-900">Email</label>
+                    <input id="resetEmail" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div>
+                    <label class="text-sm text-amber-900">Token resetu</label>
+                    <input id="resetToken" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div>
+                    <label class="text-sm text-amber-900">Nowe hasło</label>
+                    <input id="resetNewPassword" type="password" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" />
+                </div>
+                <div id="resetAlert" class="hidden rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm"></div>
+                <button id="resetPasswordBtn" class="btn-primary w-full py-3 rounded-xl text-sm font-semibold border border-amber-900/30">Ustaw nowe hasło</button>
+
+                <div class="text-sm text-amber-800">
+                    Nie masz tokenu? <button id="goToForgotStep" class="underline">Wyślij token ponownie</button>
+                </div>
             </div>
         </div>
     </div>
@@ -145,6 +182,22 @@
         const mainNav = document.getElementById('mainNav');
         const navMyCharacters = document.getElementById('navMyCharacters');
         const navCreateCharacter = document.getElementById('navCreateCharacter');
+        const forgotPassLink = document.getElementById('forgotPassLink');
+        const passwordModal = document.getElementById('passwordModal');
+        const closePasswordModal = document.getElementById('closePasswordModal');
+        const forgotStep = document.getElementById('forgotStep');
+        const resetStep = document.getElementById('resetStep');
+        const passwordModalTitle = document.getElementById('passwordModalTitle');
+        const passwordModalSubtitle = document.getElementById('passwordModalSubtitle');
+
+        const sendResetTokenBtn = document.getElementById('sendResetTokenBtn');
+        const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+        const forgotEmail = document.getElementById('forgotEmail');
+        const resetEmail = document.getElementById('resetEmail');
+        const resetToken = document.getElementById('resetToken');
+        const resetNewPassword = document.getElementById('resetNewPassword');
+        const forgotAlert = document.getElementById('forgotAlert');
+        const resetAlert = document.getElementById('resetAlert');
 
         let mode = 'login';
         let currentUser = null;
@@ -224,6 +277,29 @@
             authAlert.textContent = '';
             authAlert.classList.add('hidden');
         }
+
+        function showForgot() {
+            passwordModalTitle.textContent = 'Wyślij link resetujący';
+            passwordModalSubtitle.textContent = 'Podaj email konta, a wyślemy token resetu (w wersji dev wypisany jest na konsoli).';
+            forgotStep.classList.remove('hidden');
+            resetStep.classList.add('hidden');
+        }
+        function showReset() {
+            passwordModalTitle.textContent = 'Ustaw nowe hasło';
+            passwordModalSubtitle.textContent = 'Wpisz email, token resetu i nowe hasło.';
+            resetStep.classList.remove('hidden');
+            forgotStep.classList.add('hidden');
+        }
+        function alertForgot(msg) {
+            forgotAlert.textContent = msg;
+            forgotAlert.classList.remove('hidden');
+        }
+        function alertReset(msg) {
+            resetAlert.textContent = msg;
+            resetAlert.classList.remove('hidden');
+        }
+        function clearForgotAlert() { forgotAlert.textContent = ''; forgotAlert.classList.add('hidden'); }
+        function clearResetAlert() { resetAlert.textContent = ''; resetAlert.classList.add('hidden'); }
 
         authButton?.addEventListener('click', () => {
             if (currentUser) {
@@ -341,6 +417,70 @@
                     authSubmit.disabled = false;
                     authSubmit.textContent = 'Wyślij';
                 }
+            }
+        });
+
+        forgotPassLink?.addEventListener('click', () => { showForgot(); passwordModal.classList.remove('hidden'); });
+        closePasswordModal?.addEventListener('click', () => { passwordModal.classList.add('hidden'); });
+
+        document.getElementById('goToResetStep')?.addEventListener('click', showReset);
+        document.getElementById('goToForgotStep')?.addEventListener('click', showForgot);
+
+        sendResetTokenBtn?.addEventListener('click', async () => {
+            clearForgotAlert();
+            const email = forgotEmail.value.trim();
+            if (!email) { alertForgot('Podaj email.'); return; }
+            sendResetTokenBtn.disabled = true;
+            sendResetTokenBtn.textContent = 'Wysyłanie...';
+            try {
+                const res = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    alertForgot(data.error || 'Błąd wysyłania tokenu.');
+                    return;
+                }
+                alertForgot('Token został wysłany (sprawdź konsolę serwera).');
+                forgotAlert.classList.remove('text-red-700', 'bg-red-50', 'border-red-200');
+                forgotAlert.classList.add('text-green-700', 'bg-green-50', 'border-green-200');
+            } catch (e) {
+                alertForgot('Problem z połączeniem.');
+            } finally {
+                sendResetTokenBtn.disabled = false;
+                sendResetTokenBtn.textContent = 'Wyślij token';
+            }
+        });
+
+        resetPasswordBtn?.addEventListener('click', async () => {
+            clearResetAlert();
+            const email = resetEmail.value.trim();
+            const token = resetToken.value.trim();
+            const newPassword = resetNewPassword.value;
+            if (!email || !token || !newPassword) { alertReset('Uzupełnij wszystkie pola.'); return; }
+            resetPasswordBtn.disabled = true;
+            resetPasswordBtn.textContent = 'Przetwarzanie...';
+            try {
+                const res = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userNameOrEmail: email, token, newPassword })
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    alertReset(data.error || 'Nie udało się zresetować hasła.');
+                    return;
+                }
+                alertReset('Hasło zostało zaktualizowane. Możesz się zalogować.');
+                resetAlert.classList.remove('text-red-700', 'bg-red-50', 'border-red-200');
+                resetAlert.classList.add('text-green-700', 'bg-green-50', 'border-green-200');
+            } catch (e) {
+                alertReset('Problem z połączeniem.');
+            } finally {
+                resetPasswordBtn.disabled = false;
+                resetPasswordBtn.textContent = 'Ustaw nowe hasło';
             }
         });
 
