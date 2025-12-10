@@ -11,4 +11,5 @@ public interface ICharacterService
     public IEnumerable<Character> GetCharacters(int? userId = null);
     public void SaveCharacter(Character character);
     public void DeleteCharacter(int id);
+    public void UpdateCharacter(Character character);
 }

@@ -80,6 +80,22 @@ namespace Projekt.Web.Controllers
             return data;
         }
 
+        [HttpPost]
+        public async Task<bool> SaveNotes(int charId, string? notes) {
+            try {
+                var character = characterService.GetCharacter(charId);
+                Console.WriteLine("Character: " + charId);
+                Console.WriteLine("Notes: " + notes);
+                character.Notes = notes;
+
+                characterService.UpdateCharacter(character);
+                return true;
+            } catch (Exception e) {
+                
+            }
+            return false;    
+        }
+
         public async Task<string> GetNameByIndex(string url)
         {
             var response = await _httpClient.GetStringAsync(

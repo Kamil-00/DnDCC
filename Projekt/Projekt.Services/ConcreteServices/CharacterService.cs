@@ -23,6 +23,16 @@ public class CharacterService : BaseService, ICharacterService
             : DbContext.Characters.AsQueryable().Where(c => c.UserId == userId.Value).ToList();
     }
 
+    public void UpdateCharacter(Character character)
+    {
+        try {
+            DbContext.Characters.Update(character);
+        } catch (Exception e) {
+            //obsluga bledu
+        }
+        DbContext.SaveChanges();
+    }
+
     public void SaveCharacter(Character character) {
         try {
             DbContext.Characters.Add(character);

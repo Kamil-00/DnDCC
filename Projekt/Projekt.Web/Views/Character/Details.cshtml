@@ -73,6 +73,24 @@
         }
         </ul>
     </div>
+
+    <form id="notesForm">
+        <h3 class="title-font text-lg text-amber-900 mb-2">Notatki</h3>
+        <input id="charId" name="charId" type="hidden" value="@Model.Id"/>
+        <textarea id="notes" name="Notes" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg focus:ring focus:ring-amber-200 bg-white/90;" style="min-height:250px">@Model.Notes</textarea>
+         <button onclick="saveNotes()" type="button" id="saveBtn" class="btn-primary px-5 py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+            Zapisz notatki
+        </button>
+    </form>
+
+    <form id="notesForm">
+        <h3 class="title-font text-lg text-amber-900 mb-2">Notatki</h3>
+        <input id="charId" name="charId" type="hidden" value="@Model.Id"/>
+        <textarea id="notes" name="Notes" class="w-full mt-1 px-3 py-2 border border-amber-900/20 rounded-lg focus:ring focus:ring-amber-200 bg-white/90;" style="min-height:250px">@Model.Notes</textarea>
+         <button onclick="saveNotes()" type="button" id="saveBtn" class="btn-primary px-5 py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+            Zapisz notatki
+        </button>
+    </form>
 </div>
 
 @section Scripts {
@@ -132,5 +150,32 @@
             avatarBtn.textContent = 'Wygeneruj awatar';
         }
     });
+
+    async function saveNotes() {
+        const notes = document.getElementById("notes").value;
+        const charId = parseInt(document.getElementById("charId").value);
+        console.log("notes: " + notes);
+        console.log("charId: " + charId);
+        try {
+            const response = await fetch('/Character/SaveNotes?charId='+charId+"&notes="+notes, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            console.log(response);
+            const result = await response.json();
+            console.log(result);
+            if (result === true) {
+                alert("Notatka została zapisana!");
+            } else {
+                alert("Wystąpił błąd podczas zapisywania notatki.");
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("Błąd połączenia z serwerem.");
+        }
+    }
 </script>
 }
