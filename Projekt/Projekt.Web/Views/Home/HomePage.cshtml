@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Strona główna";
+    var cards = new[]
+    {
+        new { Title = "Podręczniki", Description = "Wyszukaj i przeglądaj swoje podręczniki D&D.", Action = Url.Action("Index", "Home"), Badge = "PDF" },
+        new { Title = "Moje postacie", Description = "Zarządzaj bohaterami i aktualizuj ich arkusze.", Action = Url.Action("Index", "Character"), Badge = "Hero" },
+        new { Title = "Stwórz postać", Description = "Zbuduj nowego bohatera krok po kroku.", Action = Url.Action("Add", "Character"), Badge = "New" }
+    };
+}
+
+<div class="space-y-8 text-amber-900">
+    <div class="text-center space-y-2">
+        <p class="text-sm uppercase tracking-[0.35em] text-amber-700">DnD Character Creator</p>
+        <h1 class="title-font text-4xl md:text-5xl">Strona główna</h1>
+        <p class="max-w-2xl mx-auto text-amber-800">Szybki dostęp do kluczowych sekcji aplikacji. Wybierz kafelek i zanurz się w przygodzie.</p>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-3">
+        @foreach (var card in cards)
+        {
+            <a href="@card.Action"
+               class="parchment rounded-2xl p-6 flex flex-col gap-4 border border-amber-900/30 bg-gradient-to-b from-white/70 to-amber-50/70 transition transform hover:-translate-y-1 hover:shadow-2xl">
+                <div class="w-16 h-16 rounded-full border border-amber-900/20 bg-white/80 flex items-center justify-center text-xs font-semibold uppercase tracking-wide text-amber-800">
+                    @card.Badge
+                </div>
+                <div>
+                    <h2 class="title-font text-2xl">@card.Title</h2>
+                    <p class="text-sm text-amber-800 mt-1">@card.Description</p>
+                </div>
+                <span class="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
+                    Przejdź dalej
+                </span>
+            </a>
+        }
+    </div>
+</div>

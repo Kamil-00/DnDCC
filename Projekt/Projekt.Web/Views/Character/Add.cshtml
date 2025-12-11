@@ -79,15 +79,47 @@ const saveBtn = document.getElementById('saveBtn');
 const profList = document.getElementById('proficienciesList');
 const itemsList = document.getElementById('itemsList');
 const formAlert = document.getElementById('formAlert');
+let equipmentChoices = [];
+let tempErrorTimeout = null;
+let tempErrorActive = false;
 
-function showError(msg) {
+const escapeHtml = (str = '') => str
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+function showError(msg, isTemp = false) {
   formAlert.textContent = msg;
   formAlert.classList.remove('hidden');
+  if (isTemp) {
+    tempErrorActive = true;
+  } else {
+    tempErrorActive = false;
+    clearTimeout(tempErrorTimeout);
+    tempErrorTimeout = null;
+  }
 }
 
 function clearError() {
   formAlert.textContent = '';
   formAlert.classList.add('hidden');
+  clearTimeout(tempErrorTimeout);
+  tempErrorTimeout = null;
+  tempErrorActive = false;
+}
+
+function showTempError(msg) {
+  showError(msg, true);
+  clearTimeout(tempErrorTimeout);
+  tempErrorTimeout = setTimeout(() => {
+    if (tempErrorActive) {
+      clearError();
+    }
+    tempErrorTimeout = null;
+    tempErrorActive = false;
+  }, 2500);
 }
 
 async function loadProficiencies(className) {
@@ -113,6 +145,46 @@ async function loadProficiencies(className) {
 
 async function loadItems(className) {
   itemsList.innerHTML = '<p class="text-amber-700">Ladowanie...</p>';
+  equipmentChoices = [];
+
+  const renderRegularItems = (regularItems) => {
+    if (!regularItems.length) return '<p class="text-sm text-amber-700">Brak stalowych pozycji</p>';
+    return regularItems.map((item) => {
+      const name = escapeHtml(item.Name ?? item.name ?? 'Przedmiot');
+      const qty = item.Quantity ?? item.quantity ?? 1;
+      return `<div class="text-sm text-amber-900">• ${name} <span class="text-xs text-amber-700">× ${qty}</span></div>`;
+    }).join('');
+  };
+
+  const renderCategoryItems = (categoryItems, choiceIdx, setIdx, limit) => {
+    if (!categoryItems.length) return '';
+    const limitText = limit
+      ? `<p class="text-xs text-amber-700 mb-1">Wybierz ${limit === 1 ? '1 pozycję' : `do ${limit} pozycji`} z listy poniżej:</p>`
+      : '';
+    return `
+      <div class="bg-amber-50 border border-amber-900/15 rounded-lg p-2 mt-2">
+        ${limitText}
+        <div class="max-h-40 overflow-y-auto space-y-1">
+          ${categoryItems.map((item, optionIdx) => {
+            const name = escapeHtml(item.Name ?? item.name ?? 'Opcja');
+            const qty = item.Quantity ?? item.quantity ?? 1;
+            const id = `cat-${choiceIdx}-${setIdx}-${optionIdx}`;
+            return `
+              <label for="${id}" class="flex items-center gap-2 text-sm text-amber-900">
+                <input id="${id}" type="checkbox" class="category-checkbox accent-amber-800"
+                       data-choice-index="${choiceIdx}"
+                       data-set-index="${setIdx}"
+                       data-limit="${limit || 0}"
+                       data-name="${name}"
+                       data-quantity="${qty}"
+                       disabled>
+                <span>${name} <span class="text-xs text-amber-700">× ${qty}</span></span>
+              </label>`;
+          }).join('')}
+        </div>
+      </div>`;
+  };
+
   try {
     const res = await fetch(`@Url.Action("GetItems","Character")?className=${encodeURIComponent(className)}`);
     if (!res.ok) throw new Error('Blad pobierania ekwipunku');
@@ -121,29 +193,38 @@ async function loadItems(className) {
       itemsList.innerHTML = '<p class="text-amber-700">Brak opcji</p>';
       return;
     }
-    itemsList.innerHTML = data.map((choice, idx) => {
+    equipmentChoices = data;
+    itemsList.innerHTML = data.map((choice, choiceIdx) => {
       const sets = (choice.ItemSets || choice.itemSets || []);
-      const options = sets.map((set) => {
+      const desc = choice.Description ?? choice.description ?? 'Wybierz ekwipunek';
+      const chooseCount = choice.ChooseCount ?? choice.chooseCount ?? 0;
+      const chooseInfo = chooseCount ? `<span class="text-xs text-amber-700">Wybierz ${chooseCount}</span>` : '';
+      const options = sets.map((set, setIdx) => {
         const regularItems = set.RegularItems || set.regularItems || [];
         const categoryItems = set.CategoryItems || set.categoryItems || [];
-        const regular = regularItems.map(item => `<div class="text-sm text-amber-900">• ${item.Name ?? item.name} x ${item.Quantity ?? item.quantity}</div>`).join('');
-        const category = categoryItems.map(item => `<option value="${item.Name ?? item.name}">${item.Name ?? item.name}</option>`).join('');
-        const categorySelect = categoryItems.length
-          ? `<select class="mt-1 px-2 py-1 border border-amber-900/20 rounded item-select bg-white/90" data-choice="${idx}">
-                <option value="">Wybierz (${set.CategoryCount ?? set.categoryCount ?? 1})</option>
-                ${category}
-             </select>`
-          : '';
+        const checkboxId = `set-${choiceIdx}-${setIdx}`;
+        const optionLabel = String.fromCharCode(65 + (setIdx % 26));
         return `
-          <div class="border border-amber-900/15 rounded-lg p-2 bg-amber-50">
-            ${regular || '<div class="text-sm text-amber-700">Brak stalowych pozycji</div>'}
-            ${categorySelect}
-          </div>`;
+          <label class="border border-amber-900/20 rounded-lg p-3 bg-white/70 space-y-2 flex gap-3 cursor-pointer" for="${checkboxId}">
+            <input id="${checkboxId}" type="checkbox" class="item-set-checkbox mt-1 accent-amber-800 shrink-0"
+                   data-choice-index="${choiceIdx}"
+                   data-set-index="${setIdx}"
+                   data-choice-desc="${escapeHtml(desc)}"
+                   data-choice-limit="${chooseCount}">
+            <div class="flex-1 space-y-2">
+              <div class="font-semibold text-sm text-amber-900">Opcja ${optionLabel}</div>
+              ${renderRegularItems(regularItems)}
+              ${renderCategoryItems(categoryItems, choiceIdx, setIdx, set.CategoryCount ?? set.categoryCount ?? 0)}
+            </div>
+          </label>`;
       }).join('');
       return `
-        <div class="border border-amber-900/20 rounded-lg p-3 bg-white/80">
-          <div class="title-font text-amber-900 text-sm mb-2">${choice.Description ?? choice.description ?? 'Wybierz ekwipunek'}</div>
-          <div class="space-y-2">${options}</div>
+        <div class="border border-amber-900/20 rounded-2xl p-3 bg-white/80 space-y-3">
+          <div>
+            <div class="title-font text-amber-900 text-base">${desc}</div>
+            ${chooseInfo}
+          </div>
+          <div class="space-y-3">${options}</div>
         </div>`;
     }).join('');
   } catch (e) {
@@ -155,6 +236,41 @@ document.getElementById('class').addEventListener('change', (e) => {
   const cls = e.target.value;
   loadProficiencies(cls);
   loadItems(cls);
+});
+
+itemsList.addEventListener('change', (event) => {
+  const target = event.target;
+  if (target.classList.contains('item-set-checkbox')) {
+    const choiceIdx = Number(target.dataset.choiceIndex);
+    const setIdx = Number(target.dataset.setIndex);
+    const limit = Number(target.dataset.choiceLimit || 0);
+    if (target.checked && limit) {
+      const selectedCount = itemsList.querySelectorAll(`.item-set-checkbox[data-choice-index="${choiceIdx}"]:checked`).length;
+      if (selectedCount > limit) {
+        target.checked = false;
+        showTempError(`W tej sekcji możesz wybrać maksymalnie ${limit} opcję.`);
+        return;
+      }
+    }
+
+    itemsList.querySelectorAll(`.category-checkbox[data-choice-index="${choiceIdx}"][data-set-index="${setIdx}"]`).forEach(cb => {
+      cb.disabled = !target.checked;
+      if (!target.checked) cb.checked = false;
+    });
+  }
+
+  if (target.classList.contains('category-checkbox')) {
+    const limit = Number(target.dataset.limit || 0);
+    const choiceIdx = Number(target.dataset.choiceIndex);
+    const setIdx = Number(target.dataset.setIndex);
+    if (target.checked && limit) {
+      const checked = itemsList.querySelectorAll(`.category-checkbox[data-choice-index="${choiceIdx}"][data-set-index="${setIdx}"]:checked`).length;
+      if (checked > limit) {
+        target.checked = false;
+        showTempError(`Wybierz maksymalnie ${limit} element${limit === 1 ? '' : 'y'} w tej opcji.`);
+      }
+    }
+  }
 });
 
 saveBtn.addEventListener('click', async () => {
@@ -176,10 +292,54 @@ saveBtn.addEventListener('click', async () => {
   }
 
   const proficiencies = Array.from(document.querySelectorAll('.proficiency-check:checked')).map(i => i.value);
-  const items = Array.from(document.querySelectorAll('.item-select'))
-    .map(sel => sel.value)
-    .filter(Boolean)
-    .map(val => ({ name: val, quantity: 1 }));
+  const items = [];
+  const selectedSets = Array.from(document.querySelectorAll('.item-set-checkbox:checked'));
+  for (let i = 0; i < equipmentChoices.length; i++) {
+    const choice = equipmentChoices[i];
+    const required = Number(choice?.ChooseCount ?? choice?.chooseCount ?? 0);
+    if (required > 0) {
+      const selectedForChoice = selectedSets.filter(cb => Number(cb.dataset.choiceIndex) === i).length;
+      if (selectedForChoice !== required) {
+        showError(`W sekcji "${choice.Description ?? choice.description}" wybierz dokładnie ${required} opcję.`);
+        return;
+      }
+    }
+  }
+  for (const checkbox of selectedSets) {
+    const choiceIdx = Number(checkbox.dataset.choiceIndex);
+    const setIdx = Number(checkbox.dataset.setIndex);
+    const choiceData = equipmentChoices?.[choiceIdx];
+    const setData = choiceData?.ItemSets?.[setIdx] ?? choiceData?.itemSets?.[setIdx];
+    if (!setData) continue;
+
+    const regularItems = setData.RegularItems || setData.regularItems || [];
+    const categoryItems = setData.CategoryItems || setData.categoryItems || [];
+    regularItems.forEach(item => {
+      items.push({
+        name: item.Name ?? item.name,
+        quantity: item.Quantity ?? item.quantity ?? 1
+      });
+    });
+
+    const categoryChecks = document.querySelectorAll(`.category-checkbox[data-choice-index="${choiceIdx}"][data-set-index="${setIdx}"]:checked`);
+    if (categoryItems.length > 0) {
+      const expectedCategory = Number(setData.CategoryCount ?? setData.categoryCount ?? 0);
+      if (expectedCategory > 0 && categoryChecks.length !== expectedCategory) {
+        showError(`W opcji "${checkbox.dataset.choiceDesc}" wybierz dokładnie ${expectedCategory} element${expectedCategory === 1 ? '' : 'y'} z listy.`);
+        return;
+      }
+      if (expectedCategory === 0 && categoryChecks.length === 0) {
+        showError(`Wybierz konkretny ekwipunek z listy dla opcji "${checkbox.dataset.choiceDesc}".`);
+        return;
+      }
+    }
+    categoryChecks.forEach(cat => {
+      items.push({
+        name: cat.dataset.name,
+        quantity: Number(cat.dataset.quantity) || 1
+      });
+    });
+  }
 
   const payload = {
     character: {

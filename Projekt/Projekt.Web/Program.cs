@@ -135,8 +135,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
+    name: "homePage",
+    pattern: "HomePage",
+    defaults: new { controller = "Home", action = "HomePage" });
+
+app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=HomePage}/{id?}");
 
 
 // Simple endpoint to test authentication

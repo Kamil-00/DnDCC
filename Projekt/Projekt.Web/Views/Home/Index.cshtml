@@ -2,21 +2,80 @@
     ViewData["Title"] = "Podgląd PDF";
 }
 
-<div class="flex flex-col items-center justify-center min-h-[70vh] space-y-6 text-amber-900">
+<div class="space-y-8 text-amber-900">
   <div class="text-center space-y-2">
     <p class="text-sm uppercase tracking-wide text-amber-800">Tome of Knowledge</p>
     <h1 class="title-font text-3xl text-amber-900">Podgląd podręcznika</h1>
-    <p class="text-amber-800">Otwórz cały PDF lub wybrane strony.</p>
+    <p class="text-amber-800">Otwórz cały Players Handbook lub przeskocz do konkretnej sekcji.</p>
   </div>
 
-  <div class="flex gap-3">
-    <button id="openPdfBtn" class="btn-primary px-6 py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
-      Otwórz cały PDF
-    </button>
+  <div class="grid gap-5 md:grid-cols-2">
+    <div class="parchment rounded-2xl p-5 space-y-4 border border-amber-900/20">
+      <h2 class="title-font text-xl">Szybki dostęp</h2>
+      <div class="flex flex-wrap gap-4">
+        <button id="openPdfBtn" class="btn-primary px-5 py-3 rounded-xl text-sm font-semibold border border-amber-900/30">
+          Otwórz cały PDF
+        </button>
+        <button id="openEquipmentBtn" class="px-5 py-3 rounded-xl text-sm font-semibold border border-amber-900/30 text-amber-900 bg-amber-100 hover:bg-amber-200">
+          Ekwipunek (144–162)
+        </button>
+        <button id="openOriginsBtn" class="px-5 py-3 rounded-xl text-sm font-semibold border border-amber-900/30 text-amber-900 bg-amber-100 hover:bg-amber-200">
+          Pochodzenia (126–142)
+        </button>
+      </div>
+    </div>
 
-    <button id="openPdfSectionBtn" class="px-6 py-3 rounded-xl text-sm font-semibold border border-amber-900/30 text-amber-900 bg-amber-100 hover:bg-amber-200">
-      Otwórz strony 19–30
-    </button>
+    <div class="parchment rounded-2xl p-5 space-y-4 border border-amber-900/20">
+      <h2 class="title-font text-xl">Szybki przedział stron</h2>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <input type="number" id="customStart" min="1" class="flex-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" placeholder="Od strony" />
+        <input type="number" id="customEnd" min="1" class="flex-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90" placeholder="Do strony" />
+        <button id="openCustomRange" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold border border-amber-900/30">Otwórz</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-5 md:grid-cols-2">
+    <div class="parchment rounded-2xl p-5 border border-amber-900/20 space-y-4">
+      <h2 class="title-font text-xl">Rasy</h2>
+      <p class="text-sm text-amber-800">Wybierz rasę, aby szybko otworzyć odpowiednie strony podręcznika.</p>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <select id="raceSelect" class="flex-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90">
+          <option value="Krasnoludy" data-start="19" data-end="21">Krasnoludy</option>
+          <option value="Elfy" data-start="22" data-end="26">Elfy</option>
+          <option value="Niziołki" data-start="27" data-end="29">Niziołki</option>
+          <option value="Ludzie" data-start="30" data-end="32">Ludzie</option>
+          <option value="Smokoludzie" data-start="33" data-end="35">Smokoludzie</option>
+          <option value="Gnomy" data-start="36" data-end="38">Gnomy</option>
+          <option value="Półelfy" data-start="39" data-end="40">Półelfy</option>
+          <option value="Półorki" data-start="41" data-end="42">Półorki</option>
+          <option value="Diabelstwa" data-start="43" data-end="44">Diabelstwa</option>
+        </select>
+        <button id="selectPdfBtnRace" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold border border-amber-900/30 whitespace-nowrap">Otwórz rasę</button>
+      </div>
+    </div>
+
+    <div class="parchment rounded-2xl p-5 border border-amber-900/20 space-y-4">
+      <h2 class="title-font text-xl">Klasy</h2>
+      <p class="text-sm text-amber-800">Szybkie przejście do opisów klas i ich zdolności.</p>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <select id="classSelect" class="flex-1 px-3 py-2 border border-amber-900/20 rounded-lg bg-white/90">
+          <option value="Barbarzyńca" data-start="47" data-end="51">Barbarzyńca</option>
+          <option value="Bard" data-start="52" data-end="56">Bard</option>
+          <option value="Kleryk" data-start="57" data-end="64">Kleryk</option>
+          <option value="Druid" data-start="65" data-end="70">Druid</option>
+          <option value="Wojownik" data-start="71" data-end="76">Wojownik</option>
+          <option value="Mnich" data-start="77" data-end="82">Mnich</option>
+          <option value="Paladyn" data-start="83" data-end="89">Paladyn</option>
+          <option value="Łotr" data-start="90" data-end="94">Łotr</option>
+          <option value="Łowca" data-start="95" data-end="99">Łowca</option>
+          <option value="Zaklinacz" data-start="100" data-end="105">Zaklinacz</option>
+          <option value="Czarnoksiężnik" data-start="106" data-end="112">Czarnoksiężnik</option>
+          <option value="Mag" data-start="113" data-end="120">Mag</option>
+        </select>
+        <button id="selectPdfBtnClass" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold border border-amber-900/30 whitespace-nowrap">Otwórz klasę</button>
+      </div>
+    </div>
   </div>
 
   <div id="pdfModal" class="fixed inset-0 bg-black/75 hidden z-50 flex items-center justify-center px-4">
@@ -34,11 +93,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     const openAllBtn = document.getElementById('openPdfBtn');
-    const openSectionBtn = document.getElementById('openPdfSectionBtn');
     const closeBtn = document.getElementById('closePdfBtn');
     const modal = document.getElementById('pdfModal');
     const container = document.getElementById('pdfContainer');
     const title = document.getElementById('pdfTitle');
+    const raceSelect = document.getElementById('raceSelect');
+    const classSelect = document.getElementById('classSelect');
+    const raceBtn = document.getElementById('selectPdfBtnRace');
+    const classBtn = document.getElementById('selectPdfBtnClass');
+    const openEquipmentBtn = document.getElementById('openEquipmentBtn');
+    const openOriginsBtn = document.getElementById('openOriginsBtn');
+    const openCustomRange = document.getElementById('openCustomRange');
+    const customStart = document.getElementById('customStart');
+    const customEnd = document.getElementById('customEnd');
     const url = "/Players_Handbook.pdf";
     let currentRender = null;
 
@@ -54,8 +121,7 @@
       for (let i = startPage; i <= endPage; i++) {
         if (renderSession.cancelled) return;
         const page = await pdf.getPage(i);
-        const scale = 1.1;
-        const viewport = page.getViewport({ scale });
+        const viewport = page.getViewport({ scale: 1.1 });
         const pageWrapper = document.createElement("div");
         pageWrapper.classList.add("flex", "flex-col", "items-center");
         const canvas = document.createElement("canvas");
@@ -75,18 +141,42 @@
       currentRender = null;
     }
 
-    openAllBtn.addEventListener('click', async () => {
+    function openRange(startPage, endPage, label) {
+      if (!startPage || !endPage || startPage < 1 || endPage < startPage) return;
+      title.textContent = label;
+      modal.classList.remove('hidden');
+      container.innerHTML = `<p class="text-amber-800 text-center mt-6">Ładowanie stron ${startPage}–${endPage}...</p>`;
+      renderPdf(startPage, endPage);
+    }
+
+    openAllBtn.addEventListener('click', () => {
       title.textContent = "Podgląd całego dokumentu";
       modal.classList.remove('hidden');
       container.innerHTML = `<p class="text-amber-800 text-center mt-6">Ładowanie...</p>`;
-      await renderPdf(1);
+      renderPdf(1);
     });
 
-    openSectionBtn.addEventListener('click', async () => {
-      title.textContent = "Podgląd stron 19–30";
-      modal.classList.remove('hidden');
-      container.innerHTML = `<p class="text-amber-800 text-center mt-6">Ładowanie wybranych stron...</p>`;
-      await renderPdf(19, 30);
+    raceBtn.addEventListener('click', () => {
+      const option = raceSelect.options[raceSelect.selectedIndex];
+      openRange(Number(option.dataset.start), Number(option.dataset.end), option.value);
+    });
+
+    classBtn.addEventListener('click', () => {
+      const option = classSelect.options[classSelect.selectedIndex];
+      openRange(Number(option.dataset.start), Number(option.dataset.end), option.value);
+    });
+
+    openEquipmentBtn.addEventListener('click', () => openRange(144, 162, "Ekwipunek"));
+    openOriginsBtn.addEventListener('click', () => openRange(126, 142, "Pochodzenia"));
+
+    openCustomRange.addEventListener('click', () => {
+      const start = Number(customStart.value);
+      const end = Number(customEnd.value);
+      if (!start || !end || start > end) {
+        alert("Podaj prawidłowy przedział stron.");
+        return;
+      }
+      openRange(start, end, `Strony ${start}–${end}`);
     });
 
     closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
