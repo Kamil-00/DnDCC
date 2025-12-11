@@ -18,7 +18,22 @@ namespace Projekt.Web.Controllers
             return View();
         }
 
+        public IActionResult HomePage()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
+        {
+            return View();
+        }
+
+        public IActionResult Contact()
+        {
+            return View();
+        }
+
+        public IActionResult Faq()
         {
             return View();
         }

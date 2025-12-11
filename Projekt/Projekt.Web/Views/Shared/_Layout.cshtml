@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Crimson+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
     <link rel="icon" type="image/png" href="/favicon.png">
     <style>
         :root {
@@ -36,6 +37,10 @@
         }
         .btn-primary:hover { filter: brightness(1.05); }
         .modal-backdrop { background: rgba(0,0,0,0.65); }
+        .parchment { width: 100%; box-sizing: border-box; }
+        details { display: block; width: 100%; }
+        summary { list-style: none; }
+        summary::-webkit-details-marker { display: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -43,10 +48,21 @@
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between text-amber-100">
             <a href="@Url.Action("Index","Home")" class="title-font text-xl tracking-wide">DnDCC</a>
             <nav id="mainNav" class="grid gap-3 text-sm uppercase tracking-wide items-center">
-                <!-- Links będą dynamicznie dodawane przez JavaScript -->
+                <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="/HomePage">Strona główna</a>
                 <a class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px]" href="@Url.Action("Index","Home")">Podręczniki</a>
                 <a id="navMyCharacters" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] hidden" href="@Url.Action("Index","Character")">Moje postacie</a>
                 <a id="navCreateCharacter" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] hidden" href="@Url.Action("Add","Character")">Stwórz postać</a>
+                <div id="helpMenu" class="relative">
+                    <button id="helpMenuButton" type="button" class="nav-link w-full text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-circle-question"></i>
+                        POMOC
+                        <span aria-hidden="true" class="text-amber-500 text-xs"></span>
+                    </button>
+                    <div id="helpMenuPanel" class="hidden absolute right-0 mt-1 w-44 rounded-xl border border-amber-900/25 bg-black/70 text-amber-100 shadow-lg z-50">
+                        <a href="@Url.Action("Contact","Home")" class="block px-4 py-2 hover:bg-amber-900/30">KONTAKT</a>
+                        <a href="@Url.Action("Faq","Home")" class="block px-4 py-2 hover:bg-amber-900/30">FAQ</a>
+                    </div>
+                </div>
                 <button id="authButton" class="nav-link text-center px-3 py-2 rounded-lg border border-amber-900/40 bg-black/30 whitespace-nowrap min-w-[140px] flex items-center justify-center gap-2">
                     <img src="/images/konto.webp" alt="konto" class="w-4 h-4">
                     <span id="authButtonText">LOGOWANIE/REJESTRACJA</span>
@@ -235,6 +251,9 @@
         const resetNewPassword = document.getElementById('resetNewPassword');
         const forgotAlert = document.getElementById('forgotAlert');
         const resetAlert = document.getElementById('resetAlert');
+        const helpMenu = document.getElementById('helpMenu');
+        const helpMenuButton = document.getElementById('helpMenuButton');
+        const helpMenuPanel = document.getElementById('helpMenuPanel');
 
         let mode = 'login';
         let currentUser = null;
@@ -248,14 +267,14 @@
         };
 
         function updateNavigation() {
+            if (!mainNav) return;
+            mainNav.classList.remove('grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6');
             if (currentUser) {
-                mainNav.classList.remove('grid-cols-2');
-                mainNav.classList.add('grid-cols-4');
+                mainNav.classList.add('grid-cols-6');
                 navMyCharacters.classList.remove('hidden');
                 navCreateCharacter.classList.remove('hidden');
             } else {
-                mainNav.classList.remove('grid-cols-4');
-                mainNav.classList.add('grid-cols-2');
+                mainNav.classList.add('grid-cols-4');
                 navMyCharacters.classList.add('hidden');
                 navCreateCharacter.classList.add('hidden');
             }
@@ -530,6 +549,16 @@
             } finally {
                 resetPasswordBtn.disabled = false;
                 resetPasswordBtn.textContent = 'Ustaw nowe hasło';
+            }
+        });
+
+        helpMenuButton?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            helpMenuPanel?.classList.toggle('hidden');
+        });
+        document.addEventListener('click', (e) => {
+            if (!helpMenu?.contains(e.target)) {
+                helpMenuPanel?.classList.add('hidden');
             }
         });
 
