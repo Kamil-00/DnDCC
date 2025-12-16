@@ -49,4 +49,32 @@ public class CharacterService : BaseService, ICharacterService
         DbContext.Characters.Remove(character);
         DbContext.SaveChanges();
     }
+
+    public void AddItem(Item item){
+        var existingEquipment = DbContext.Item.FirstOrDefault(e => e.Name == item.Name && e.CharacterId == item.CharacterId);
+        if (existingEquipment != null)
+        {
+            existingEquipment.Quantity += item.Quantity;
+        }
+        else
+        {
+            DbContext.Item.Add(new Item
+            {
+                Name = item.Name,
+                Quantity = item.Quantity,
+                CharacterId = item.CharacterId
+            });
+        }
+
+        DbContext.SaveChanges();
+    }
+
+    public void RemoveItem(int itemId){
+        var it = DbContext.Item.FirstOrDefault(i => i.Id == itemId);
+        if (it != null)
+        {
+            DbContext.Item.Remove(it);
+            DbContext.SaveChanges();
+        }
+    }
 }

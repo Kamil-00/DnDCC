@@ -203,7 +203,7 @@ namespace Projekt.DAL.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Characters");
+                    b.ToTable("Characters", (string)null);
                 });
 
             modelBuilder.Entity("Projekt.Model.DataModels.Item", b =>
@@ -228,7 +228,7 @@ namespace Projekt.DAL.Migrations
 
                     b.HasIndex("CharacterId");
 
-                    b.ToTable("Item");
+                    b.ToTable("Item", (string)null);
                 });
 
             modelBuilder.Entity("Projekt.Model.DataModels.Role", b =>

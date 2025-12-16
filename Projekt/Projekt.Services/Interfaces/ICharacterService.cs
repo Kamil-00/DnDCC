@@ -12,4 +12,6 @@ public interface ICharacterService
     public void SaveCharacter(Character character);
     public void DeleteCharacter(int id);
     public void UpdateCharacter(Character character);
+    public void AddItem(Item item);
+    public void RemoveItem(int itemId);
 }

@@ -96,6 +96,39 @@ namespace Projekt.Web.Controllers
             return false;    
         }
 
+        public async Task<IActionResult> Equipment(int characterId){
+            var character = characterService.GetCharacter(characterId);
+            
+            var response = await _httpClient.GetStringAsync($"https://www.dnd5eapi.co/api/2014/equipment");
+            using var itemDoc = JsonDocument.Parse(response);
+            var allItems = itemDoc
+                .RootElement.GetProperty("results")
+                .EnumerateArray()
+                .Select(r => new SelectListItem
+                {
+                    Text = r.GetProperty("name").GetString(),
+                    Value = r.GetProperty("name").GetString(),
+                })
+                .ToList();
+                
+            ViewData["AllItems"] = allItems;
+            ViewBag.CharId = characterId;
+            return View("Equipment", character.Items);
+        }
+
+        [HttpPost]
+        public IActionResult AddEquipment(Item item){
+            characterService.AddItem(item);
+            var character = characterService.GetCharacter(item.CharacterId);
+            return RedirectToAction("Details", character);
+        }
+
+        public IActionResult RemoveEquipment(int itemId){
+
+            characterService.RemoveItem(itemId);
+            return RedirectToAction("Index");
+        }
+
         public async Task<string> GetNameByIndex(string url)
         {
             var response = await _httpClient.GetStringAsync(

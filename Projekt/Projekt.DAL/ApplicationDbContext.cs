@@ -8,6 +8,7 @@ namespace Projekt.DAL
     {
         // table properties
         public virtual DbSet<Character> Characters { get; set; } = null!;
+        public virtual DbSet<Item> Item { get; set; } = null!;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)

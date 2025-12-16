@@ -1,0 +1,56 @@
+@model IEnumerable<Projekt.Model.DataModels.Item> 
+
+@{
+    ViewData["Title"] = "Equipment";
+    var allItems = ViewData["AllItems"] as List<SelectListItem>;
+}
+
+<h2>Equipment</h2>
+
+<!-- Formularz do aktualizacji ilości istniejących przedmiotów -->
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nazwa przedmiotu</th>
+                <th>Ilość</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count(); i++)
+            {
+                <tr>
+                    <td>
+                        @Model.ElementAt(i).Name
+                        <input type="hidden" name="Items[@i].Id" value="@Model.ElementAt(i).Id" />
+                        <input type="hidden" name="Items[@i].Name" value="@Model.ElementAt(i).Name" />
+                    </td>
+                    <td>
+                        @Model.ElementAt(i).Quantity
+                    </td>
+                    <td>
+                        <a asp-action="RemoveEquipment" 
+                            asp-controller="Character" 
+                            asp-route-itemId="@Model.ElementAt(i).Id">
+                            Usuń
+                            </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+<hr />
+
+<!-- Formularz do dodawania nowych przedmiotów -->
+<form method="post" asp-action="AddEquipment" asp-controller="Character">
+    <select name="Name">
+        @foreach (var i in ViewData["AllItems"] as List<SelectListItem>)
+        {
+            <option value="@i.Value">@i.Text</option>
+        }
+    </select>
+
+    <input type="number" name="Quantity" value="1" min="1" />
+    <input type="hidden" name="CharacterId" value="@ViewBag.CharId" />
+    <button type="submit">Dodaj przedmiot</button>
+</form>
