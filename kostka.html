@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Rzut kostką RPG</title>
+    <style>
+        body {
+            background: #111;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .scene {
+            width: 120px;
+            height: 120px;
+            perspective: 600px;
+            margin: 20px 0;
+        }
+
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(.25, .8, .25, 1);
+        }
+
+        .face {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: #222;
+            border: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+        }
+
+        .front  { transform: rotateY(0deg) translateZ(60px); }
+        .back   { transform: rotateY(180deg) translateZ(60px); }
+        .right  { transform: rotateY(90deg) translateZ(60px); }
+        .left   { transform: rotateY(-90deg) translateZ(60px); }
+        .top    { transform: rotateX(90deg) translateZ(60px); }
+        .bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎲 Rzut kostką RPG</h1>
+
+    <div class="controls">
+        <label><input type="radio" name="dice" value="4"> d4</label>
+        <label><input type="radio" name="dice" value="6" checked> d6</label>
+        <label><input type="radio" name="dice" value="8"> d8</label>
+        <label><input type="radio" name="dice" value="10"> d10</label>
+        <label><input type="radio" name="dice" value="12"> d12</label>
+        <label><input type="radio" name="dice" value="20"> d20</label>
+        <label><input type="radio" name="dice" value="100"> d100</label>
+    </div>
+
+    <div class="scene">
+        <div class="cube" id="cube">
+            <div class="face front">X</div>
+            <div class="face back">X</div>
+            <div class="face right">X</div>
+            <div class="face left">X</div>
+            <div class="face top">X</div>
+            <div class="face bottom">X</div>
+        </div>
+    </div>
+
+    <button onclick="roll()">Rzuć</button>
+
+    <script>
+        const cube = document.getElementById("cube");
+
+        function getDiceType() {
+            return +document.querySelector('input[name="dice"]:checked').value;
+        }
+
+        function roll() {
+            const sides = getDiceType();
+
+            // Animacja kostki
+            const rotateX = Math.random() * 360 + 360;
+            const rotateY = Math.random() * 360 + 360;
+            cube.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+
+            setTimeout(() => {
+                const value = Math.floor(Math.random() * sides) + 1;
+
+                // Pokazujemy wynik na wszystkich ścianach
+                document.querySelectorAll(".face").forEach(f => f.textContent = value);
+
+                // „Zatrzymanie” kostki
+                cube.style.transform = "rotateX(0deg) rotateY(0deg)";
+
+                console.log(`Wynik d${sides}:`, value);
+            }, 800); // dopasowane do czasu transition
+        }
+    </script>
+</body>
+</html>
