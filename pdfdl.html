@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>D&D 5E Character Sheet Filler</title>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 2em; background: #f9f9f9; }
+    textarea { width: 100%; height: 200px; }
+    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>D&D 5E Character Sheet Filler</h1>
+  <p>Wklej tutaj JSON z danymi postaci:</p>
+  <textarea id="jsonInput">
+  {
+  "CharacterName": "Aelar Thalanil",
+  "ClassLevel": "Wizard 7",
+  "Background": "Sage",
+  "PlayerName": "Elandor",
+  "Race ": "High Elf",
+  "Alignment": "Neutral Good",
+  "XP": "23000",
+
+  "STR": "8",
+  "DEX": "14",
+  "CON": "12",
+  "INT": "18",
+  "WIS": "13",
+  "CHA": "10",
+
+  "STRmod": "-1",
+  "DEXmod ": "+2",
+  "CONmod": "+1",
+  "INTmod": "+4",
+  "WISmod": "+1",
+  "CHamod": "0",
+
+  "ST Strength": "-1",
+  "ST Dexterity": "+2",
+  "ST Constitution": "+1",
+  "ST Intelligence": "+7",
+  "ST Wisdom": "+1",
+  "ST Charisma": "0",
+
+  "Acrobatics": "+2",
+  "Animal": "+1",
+  "Arcana": "+7",
+  "Athletics": "-1",
+  "Deception ": "0",
+  "History ": "+7",
+  "Insight": "+4",
+  "Intimidation": "0",
+  "Investigation ": "+7",
+  "Medicine": "+1",
+  "Nature": "+4",
+  "Perception ": "+4",
+  "Performance": "0",
+  "Persuasion": "0",
+  "Religion": "+4",
+  "SleightofHand": "+2",
+  "Stealth ": "+2",
+  "Survival": "+1",
+
+  "AC": "13",
+  "Initiative": "+2",
+  "Speed": "30",
+  "ProfBonus": "+3",
+  "HPMax": "38",
+  "HPCurrent": "38",
+  "HPTemp": "0",
+  "HDTotal": "7d6",
+  "HD": "7d6",
+  "Passive": "14",
+
+  "Wpn Name": "Quarterstaff",
+  "Wpn1 AtkBonus": "+2",
+  "Wpn1 Damage": "1d6 bludgeoning",
+
+  "Wpn Name 2": "Fire Bolt",
+  "Wpn2 AtkBonus ": "+7",
+  "Wpn2 Damage ": "2d10 fire",
+
+  "Wpn Name 3": "Ray of Frost",
+  "Wpn3 AtkBonus  ": "+7",
+  "Wpn3 Damage ": "2d8 cold",
+
+  "AttacksSpellcasting": "Aelar wields destructive arcane power and relies mostly on spells. His spell attack bonus is +7 and save DC is 15.",
+
+  "CP": "5",
+  "SP": "8",
+  "EP": "0",
+  "GP": "63",
+  "PP": "2",
+
+  "Equipment": "Spellbook, Component Pouch, Robes, Quarterstaff, Explorer's Pack, Scroll Case, Ink & Quill, 10 sheets parchment, Healing Potion",
+  "ProficienciesLang": "Common, Elvish, Draconic, Arcana tools",
+  "Features and Traits": "Arcane Tradition: Divination. Features: Arcane Recovery, Portent (two d20 rolls per day).",
+
+  "Age": "122",
+  "Height": "180 cm",
+  "Weight": "63 kg",
+  "Eyes": "Silver",
+  "Skin": "Pale",
+  "Hair": "White",
+
+  "Spellcasting Class 2": "Wizard",
+  "SpellcastingAbility 2": "Intelligence",
+  "SpellSaveDC  2": "15",
+  "SpellAtkBonus 2": "+7",
+
+  "SlotsTotal 19": "4",
+  "SlotsRemaining 19": "4",
+  "SlotsTotal 20": "3",
+  "SlotsRemaining 20": "3",
+  "SlotsTotal 21": "3",
+  "SlotsRemaining 21": "3",
+  "SlotsTotal 22": "3",
+  "SlotsRemaining 22": "3",
+  "SlotsTotal 23": "1",
+  "SlotsRemaining 23": "1",
+  "SlotsTotal 24": "0",
+  "SlotsRemaining 24": "0",
+  "SlotsTotal 25": "0",
+  "SlotsRemaining 25": "0",
+  "SlotsTotal 26": "0",
+  "SlotsRemaining 26": "0",
+  "SlotsTotal 27": "0",
+  "SlotsRemaining 27": "0",
+
+  "Spells 1014": "Mage Hand",
+  "Spells 1015": "Prestidigitation",
+  "Spells 1016": "Minor Illusion",
+  "Spells 1017": "Fire Bolt",
+  "Spells 1018": "Ray of Frost",
+  "Spells 1019": "Detect Magic",
+  "Spells 1020": "Shield",
+  "Spells 1021": "Magic Missile",
+  "Spells 1022": "Thunderwave",
+  "Spells 1023": "Feather Fall",
+  "Spells 1024": "Expeditious Retreat",
+  "Spells 1025": "Scorching Ray",
+  "Spells 1026": "Misty Step",
+  "Spells 1027": "Mirror Image",
+  "Spells 1028": "Hold Person",
+  "Spells 1029": "Shatter",
+  "Spells 1030": "Invisibility",
+  "Spells 1031": "Arcane Lock",
+  "Spells 1032": "Fly",
+  "Spells 1033": "Counterspell",
+  "Spells 1034": "Fireball",
+  "Spells 1035": "Lightning Bolt",
+  "Spells 1036": "Hypnotic Pattern",
+  "Spells 1037": "Dispel Magic",
+  "Spells 1038": "Slow",
+  "Spells 1039": "Haste",
+  "Spells 1040": "Divination",
+  "Spells 1041": "Dimension Door",
+  "Spells 1042": "Ice Storm",
+  "Spells 1043": "Greater Invisibility",
+  "Spells 1044": "Wall of Fire",
+  "Spells 1045": "Arcane Eye",
+  "Spells 1046": "Polymorph",
+
+  "Spells 1047": "—",
+  "Spells 1048": "—",
+  "Spells 1049": "—",
+  "Spells 1050": "—",
+  "Spells 1051": "—",
+  "Spells 1052": "—",
+  "Spells 1053": "—",
+  "Spells 1054": "—",
+  "Spells 1055": "—",
+  "Spells 1056": "—",
+  "Spells 1057": "—",
+  "Spells 1058": "—",
+  "Spells 1059": "—",
+  "Spells 1060": "—",
+  "Spells 1061": "—",
+  "Spells 1062": "—",
+  "Spells 1063": "—",
+  "Spells 1064": "—",
+  "Spells 1065": "—",
+  "Spells 1066": "—",
+  "Spells 1067": "—",
+  "Spells 1068": "—",
+  "Spells 1069": "—",
+  "Spells 1070": "—",
+  "Spells 1071": "—",
+  "Spells 1072": "—",
+  "Spells 1073": "—",
+  "Spells 1074": "—",
+  "Spells 1075": "—",
+  "Spells 1076": "—",
+  "Spells 1077": "—",
+  "Spells 1078": "—",
+  "Spells 1079": "—",
+  "Spells 1080": "—",
+  "Spells 1081": "—",
+  "Spells 1082": "—",
+  "Spells 1083": "—",
+  "Spells 1084": "—",
+  "Spells 1085": "—",
+  "Spells 1086": "—",
+  "Spells 1087": "—",
+  "Spells 1088": "—",
+  "Spells 1089": "—",
+  "Spells 1090": "—",
+  "Spells 1091": "—",
+  "Spells 1092": "—",
+  "Spells 1093": "—",
+  "Spells 1094": "—",
+  "Spells 1095": "—",
+  "Spells 1096": "—",
+  "Spells 1097": "—",
+  "Spells 1098": "—",
+  "Spells 1099": "—",
+  "Spells 10100": "—",
+  "Spells 10101": "—",
+  "Spells 10102": "—",
+  "Spells 10103": "—",
+  "Spells 10104": "—",
+  "Spells 10105": "—",
+  "Spells 10106": "—",
+  "Spells 10107": "—",
+  "Spells 10108": "—",
+  "Spells 10109": "—",
+  "Spells 101010": "—",
+  "Spells 101011": "—",
+  "Spells 101012": "—",
+  "Spells 101013": "—"
+}</textarea>
+
+  <br />
+  <button id="fillBtn">Wygeneruj PDF</button>
+
+  <script>
+    document.getElementById("fillBtn").addEventListener("click", async () => {
+      try {
+        const jsonText = document.getElementById("jsonInput").value;
+        const data = JSON.parse(jsonText);
+
+        // Wczytaj PDF
+        const existingPdfBytes = await fetch("pdfs/5E_CharacterSheet_Fillable.pdf").then(res => res.arrayBuffer());
+        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+        const form = pdfDoc.getForm();
+
+        // Wypełnij wszystkie pola z JSON-a
+        for (const [key, value] of Object.entries(data)) {
+          const field = form.getFieldMaybe ? form.getFieldMaybe(key) : form.getField(key);
+          if (field) {
+            try { field.setText(String(value)); }
+            catch { /* niektóre pola mogą być checkboxami lub pustymi nazwami */ }
+          } else {
+            console.warn("Nie znaleziono pola:", key);
+          }
+        }
+
+        // Zapisz gotowy PDF
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "CharacterSheet_Filled.pdf";
+        link.click();
+      } catch (err) {
+        alert("❌ Błąd: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
